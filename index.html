@@ -131,6 +131,14 @@ nav.tabs button[aria-current="page"]{color:var(--accent);background:var(--accent
 .sheet-top{display:flex;align-items:center;gap:10px}
 .sheet-top h2{margin:0;font-family:var(--display);font-weight:400;font-size:1.45rem}
 .x{margin-left:auto;border:0;background:var(--surface);width:38px;height:38px;border-radius:50%;font-size:1.05rem}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.cats button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;font-size:.88rem}
+.cats button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.foodgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;max-height:260px;overflow:auto;padding:2px}
+.foodgrid button{display:flex;align-items:center;gap:8px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;font-size:.88rem;min-width:0}
+.foodgrid button span:nth-child(2){flex:1;min-width:0}
+.foodgrid button.on{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.foodgrid button b{color:var(--accent)}
 .results{display:flex;flex-direction:column;gap:4px;max-height:210px;overflow:auto}
 .results button{display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px}
 .results button small{margin-left:auto;color:var(--muted);white-space:nowrap}
@@ -564,11 +572,14 @@ function defaultItem(f){
   if(f==="uova") return [f,60,1];
   return [f,Math.max(20,Math.min(300,Math.round(10000/Math.max(40,FOODS[f][1])/5)*5)),1];
 }
+const CATS={C:{l:"Carboidrati"},P:{l:"Proteine"},F:{l:"Grassi"},V:{l:"Frutta e verdura"},L:{l:"Latte e altro"}};
+function catOf(f){const r=roleOf(f),c=FOODS[f][6];if(c==="verd"||c==="frut")return "V";if(r==="X")return "L";if(r==="U")return "P";return r}
+function catFoods(cat){return Object.keys(FOODS).filter(f=>catOf(f)===cat).sort((a,b)=>FOODS[a][0].localeCompare(FOODS[b][0],"it"))}
 function shareOf(slot){const pct=profile.pasti==="5"?{col:.20,spu:.10,pra:.35,cen:.25}:{col:.25,spu:.10,pra:.40,cen:.35};return pct[slot]}
 function openComposer(slot,editId){
   const r=compute(profile);
   const ed=editId?MYMEALS.find(m=>m.id===editId):null;
-  let st={t:ed?ed.t:"",slot:ed?ed.slot:slot||"col",items:ed?ed.i.map(x=>[...x]):[],q:"",when:"tutti"};
+  let st={t:ed?ed.t:"",slot:ed?ed.slot:slot||"col",items:ed?ed.i.map(x=>[...x]):[],q:"",when:"tutti",cat:"C"};
   const bd=document.createElement("div");bd.className="backdrop";
   document.body.appendChild(bd);
   const close=()=>{bd.remove();document.removeEventListener("keydown",onKey)};
@@ -592,11 +603,13 @@ function openComposer(slot,editId){
       <div class="sheet-top"><h2>${ed?"Modifica il pasto":"Crea un pasto"}</h2><button class="x" id="cx" aria-label="Chiudi">✕</button></div>
       <label class="f">Nome del pasto<input id="cn" value="${esc(st.t)}" placeholder="Es. Uovo e pancarrè"></label>
       <fieldset><legend>Per</legend><div class="seg">${Object.entries(SLOTN).map(([k,l])=>`<input type="radio" name="cslot" id="cs-${k}" value="${k}" ${st.slot===k?"checked":""}><label for="cs-${k}">${l}</label>`).join("")}</div></fieldset>
-      <label class="f">Aggiungi un alimento<input id="cq" value="${esc(st.q)}" placeholder="Cerca: uovo, pancarrè, ricotta…" autocomplete="off"></label>
+      <label class="f">Scegli dalle categorie o cerca<input id="cq" value="${esc(st.q)}" placeholder="Cerca: uovo, pancarrè, ricotta…" autocomplete="off"></label>
+      ${!q?`<div class="cats" role="tablist" aria-label="Categorie">${Object.entries(CATS).map(([k,c])=>`<button role="tab" data-cat="${k}" aria-selected="${st.cat===k}">${c.l}</button>`).join("")}</div>
+      <div class="foodgrid">${catFoods(st.cat).map(f=>{const on=st.items.some(x=>x[0]===f);return `<button data-add="${f}" class="${on?"on":""}" ${on?'aria-pressed="true"':""}><span aria-hidden="true">${FOODS[f][5]||"🍽️"}</span><span>${esc(FOODS[f][0])}</span>${on?'<b aria-hidden="true">✓</b>':""}</button>`}).join("")}</div>`:""}
       ${found.length?`<div class="results">${found.map(f=>`<button data-add="${f}"><span aria-hidden="true">${FOODS[f][5]||"🍽️"}</span>${esc(FOODS[f][0])}<small>${FOODS[f][1]} kcal/100 g</small></button>`).join("")}</div>`:q?`<p class="small" style="margin:0">Nessun alimento trovato. Aggiungilo qui sotto con i valori dell'etichetta.</p>`:""}
       <div class="chosen">${st.items.map(([f,g,s],i)=>`<div class="ch"><span aria-hidden="true">${FOODS[f][5]||"🍽️"}</span><span class="n">${esc(FOODS[f][0])}</span><span class="q">${gOf(f)!=null?qLabel(f,gOf(f)):""}</span><button class="rm" data-rm="${i}" aria-label="Togli ${esc(FOODS[f][0])}">✕</button>
         <div class="opts"><label><input type="checkbox" data-fix="${i}" ${s?"":"checked"}> Quantità fissa</label>${s?`<span>calcolata dall'app</span>`:`<label><input type="number" min="5" step="5" data-g="${i}" value="${g}" id="g-${i}"> ${FOODS[f][6]==="ml"?"ml":"g"}</label>`}</div></div>`).join("")}</div>
-      ${res?`<div class="totbox"><b>${fmt(res.n.k)} kcal</b> su ${fmt(target)} previste per ${SLOTN[st.slot].toLowerCase()} · P ${fmt(res.n.P)} g · C ${fmt(res.n.C)} g · G ${fmt(res.n.G)} g</div>`:`<p class="small" style="margin:0">Cerca e aggiungi gli alimenti: le grammature compaiono subito. Spunta "Quantità fissa" per ciò che vuoi sempre uguale, per esempio 1 uovo.</p>`}
+      ${res?`<div class="totbox"><b>${fmt(res.n.k)} kcal</b> su ${fmt(target)} previste per ${SLOTN[st.slot].toLowerCase()} · P ${fmt(res.n.P)} g · C ${fmt(res.n.C)} g · G ${fmt(res.n.G)} g</div>`:`<p class="small" style="margin:0">Tocca gli alimenti per metterli nel piatto: le grammature compaiono subito. Toccali di nuovo per toglierli. Spunta "Quantità fissa" per ciò che vuoi sempre uguale, per esempio 1 uovo.</p>`}
       ${warn.map(w=>`<div class="alert warn" style="margin:0">${w}</div>`).join("")}
       <details class="addfood"><summary>Non trovi un alimento? Aggiungilo</summary>
         <p class="small">Copia i valori per 100 g dall'etichetta.</p>
@@ -615,7 +628,8 @@ function openComposer(slot,editId){
     bd.querySelectorAll('input[name="cslot"]').forEach(i=>i.onchange=()=>{st.slot=i.value;draw()});
     bd.querySelectorAll('input[name="cwhen"]').forEach(i=>i.onchange=()=>{st.when=i.value});
     const cq=$("cq");cq.oninput=e=>{st.q=e.target.value;const pos=e.target.selectionStart;draw();const n=bd.querySelector("#cq");n.focus();n.setSelectionRange(pos,pos)};
-    bd.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{st.items.push(defaultItem(b.dataset.add));st.q="";draw()});
+    bd.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const f=b.dataset.add,i=st.items.findIndex(x=>x[0]===f);if(i>=0)st.items.splice(i,1);else st.items.push(defaultItem(f));st.q="";const sc=bd.querySelector(".sheet").scrollTop;draw();bd.querySelector(".sheet").scrollTop=sc});
+    bd.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{st.cat=b.dataset.cat;const sc=bd.querySelector(".sheet").scrollTop;draw();bd.querySelector(".sheet").scrollTop=sc});
     bd.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{st.items.splice(+b.dataset.rm,1);draw()});
     bd.querySelectorAll("[data-fix]").forEach(c=>c.onchange=()=>{const i=+c.dataset.fix,it=st.items[i];if(c.checked){it[2]=0;it[1]=gOf(it[0])||it[1]}else{it[2]=1;it[1]=defaultItem(it[0])[1]}draw()});
     bd.querySelectorAll("[data-g]").forEach(inp=>inp.onchange=()=>{const v=+inp.value;if(v>0){st.items[+inp.dataset.g][1]=v;draw()}});
