@@ -415,12 +415,30 @@ function qLabel(f,g){
   if(FOODS[f][6]==="ml") return `${g} ml`;
   return `${g} g`;
 }
+// alternative per le fonti di proteine (a parità di proteine) e di grassi (a parità di calorie)
+const SW_PROT=["pollo","tacchino","merluzzo","salmone","tonno","uova","bresaola","tofu","legumi","ricotta","fiocchi","mozzarella"];
+// porzioni equivalenti tipiche (linee guida CREA): 100 g carne = 150 g pesce = 2 uova = 150 g legumi cotti = 100 g ricotta/mozzarella = 50 g bresaola
+const PORZ={pollo:100,tacchino:100,manzo:100,vitello:100,lonza:100,merluzzo:150,orata:150,branzino:150,salmone:150,sgombro:150,tonnofr:150,gamberi:150,polpo:150,tonno:80,uova:120,bresaola:50,crudo:50,cotto:60,tofu:150,tempeh:100,seitan:100,legumi:150,lenticchie:150,ceci:150,fagioli:150,ricotta:100,fiocchi:150,mozzarella:100,primosale:100,feta:70,parmigiano:40};
+const SW_FAT=["olio","avocado","mandorle","noci","nocciole","olive","burroar","pistacchi"];
 function swapsFor(f,g){
-  const c=FOODS[f][6]; if(!["cer","pane","pat"].includes(c)) return null;
-  // 100 g pasta/riso/farro/cous cous = 130 g pane = 400 g patate
-  const pasta = c==="cer"?g:c==="pane"?g/1.3:g/4;
-  const r=x=>Math.round(x/5)*5;
-  return [["Pasta",r(pasta)],["Riso",r(pasta)],["Farro",r(pasta)],["Cous cous",r(pasta)],["Pane integrale",r(pasta*1.3)],["Patate",r(pasta*4)]].filter(([n])=>!FOODS[f][0].startsWith(n));
+  const c=FOODS[f][6], role=roleOf(f), r=x=>Math.max(5,Math.round(x/5)*5);
+  const lab=(k,v)=>k==="uova"?(()=>{const n=Math.max(1,Math.round(v/60));return `${n} ${n===1?"uovo":"uova"}`})():`${r(v)} ${FOODS[k][6]==="ml"?"ml":"g"}`;
+  if(["cer","pane","pat"].includes(c)){
+    // 100 g pasta/riso/farro/cous cous = 130 g pane = 400 g patate
+    const pasta = c==="cer"?g:c==="pane"?g/1.3:g/4;
+    return [["Pasta",r(pasta)],["Riso",r(pasta)],["Farro",r(pasta)],["Cous cous",r(pasta)],["Pane integrale",r(pasta*1.3)],["Patate",r(pasta*4)]].filter(([n])=>!FOODS[f][0].startsWith(n)).map(([n,v])=>[n,v+" g"]);
+  }
+  const keto=profile&&profile.dieta==="keto", veg=profile&&profile.alim==="veg";
+  const meat=["pollo","tacchino","merluzzo","salmone","tonno","bresaola"];
+  if((role==="P"||role==="U")&&FOODS[f][2]>=5){
+    const prot=FOODS[f][2]*g/100, port=PORZ[f]?g/PORZ[f]:null;
+    return SW_PROT.filter(k=>k!==f&&!(keto&&k==="legumi")&&!(veg&&meat.includes(k))).map(k=>[FOODS[k][0],lab(k,port!=null?port*PORZ[k]:prot/FOODS[k][2]*100)]);
+  }
+  if(role==="F"){
+    const kc=FOODS[f][1]*g/100;
+    return SW_FAT.filter(k=>k!==f).map(k=>[FOODS[k][0],lab(k,kc/FOODS[k][1]*100)]);
+  }
+  return null;
 }
 
 // ===== STATO =====
@@ -486,9 +504,9 @@ function renderPiano(){
         <div class="meal-head"><div><b>${m.name}</b><div class="t">${esc(m.t)}</div></div><span class="k">${m.free?"":fmt(m.n.k)+" kcal"}</span><button class="cambia" data-pick="${mi}" aria-expanded="false">Cambia</button></div>
         ${mealPicker(m,mi)}
         ${m.free?`<div class="free">Mangia quello che ti va, con misura e senza sensi di colpa. Se puoi, inizia con della verdura.</div>`:
-        `<ul class="items">${m.items.map(([f,g],ii)=>{const sw=swapsFor(f,g);return `<li class="${sw?"has-sw":""}"><span aria-hidden="true">${FOODS[f][5]}</span><span class="n">${FOODS[f][0]}</span><span class="q">${qLabel(f,g)}</span>${sw?`<button class="sw" data-sw="${mi}-${ii}" aria-expanded="false" aria-label="Alternative a ${FOODS[f][0]}">⇆</button><div class="swaps" id="sw-${mi}-${ii}" hidden>${sw.map(([n,q])=>`<span class="chip">${n} ${q} g</span>`).join("")}</div>`:""}</li>`}).join("")}</ul>`}
+        `<ul class="items">${m.items.map(([f,g],ii)=>{const sw=swapsFor(f,g);return `<li class="${sw?"has-sw":""}"><span aria-hidden="true">${FOODS[f][5]}</span><span class="n">${FOODS[f][0]}</span><span class="q">${qLabel(f,g)}</span>${sw?`<button class="sw" data-sw="${mi}-${ii}" aria-expanded="false" aria-label="Alternative a ${FOODS[f][0]}">⇆</button><div class="swaps" id="sw-${mi}-${ii}" hidden>${sw.map(([n,q])=>`<span class="chip">${n} ${q}</span>`).join("")}</div>`:""}</li>`}).join("")}</ul>`}
       </section>`).join("")}</div>
-      <p class="small">Tutti i pesi sono a crudo, tranne i legumi che sono cotti.${profile.dieta==="keto"?"":" ⇆ mostra le alternative equivalenti per cereali, pane e patate."}</p>
+      <p class="small">Tutti i pesi sono a crudo, tranne i legumi che sono cotti. ⇆ mostra le alternative: per cereali, pane e patate a parità di carboidrati, per carne, pesce, uova, legumi e formaggi con le porzioni equivalenti delle linee guida, per olio, avocado e frutta secca a parità di calorie.</p>
     </div></div>`;
   app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{day=+b.dataset.d;renderPiano()});
   app.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const el=document.getElementById("pick-"+b.dataset.pick);el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden))});
