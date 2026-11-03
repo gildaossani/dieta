@@ -76,6 +76,10 @@ h1.big{font-family:var(--display);font-weight:400;font-size:clamp(1.7rem,5vw,2.4
 .items li.has-sw{flex-wrap:wrap}
 .chip{background:var(--accent-soft);border-radius:999px;padding:3px 10px;font-size:.84rem;font-variant-numeric:tabular-nums}
 .free{padding:14px 16px;color:var(--muted)}
+.cambia{margin-left:8px;border:0;background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font-size:.8rem;font-weight:600}
+.colpick{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.colpick button{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:9px 12px;font-size:.92rem}
+.colpick button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
 /* form */
 form{display:grid;gap:14px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -114,6 +118,32 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 nav.tabs button{border:0;background:transparent;flex:0 1 140px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;border-radius:12px;color:var(--muted);font-size:.78rem;font-weight:600}
 nav.tabs .i{font-size:1.2rem}
 nav.tabs button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+.newmeal{border:1px dashed var(--accent)!important;color:var(--accent);font-weight:600;background:transparent!important}
+.backdrop{position:fixed;inset:0;background:rgba(10,15,12,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:94%;overflow:auto;border-radius:24px 24px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+@media (min-width:860px){.backdrop{align-items:center}.sheet{border-radius:24px;max-height:88%}}
+.sheet-top{display:flex;align-items:center;gap:10px}
+.sheet-top h2{margin:0;font-family:var(--display);font-weight:400;font-size:1.45rem}
+.x{margin-left:auto;border:0;background:var(--surface);width:38px;height:38px;border-radius:50%;font-size:1.05rem}
+.results{display:flex;flex-direction:column;gap:4px;max-height:210px;overflow:auto}
+.results button{display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px}
+.results button small{margin-left:auto;color:var(--muted);white-space:nowrap}
+.chosen{display:flex;flex-direction:column;gap:8px}
+.ch{background:var(--surface);border-radius:14px;padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;box-shadow:var(--shadow)}
+.ch .n{flex:1;min-width:0;font-weight:600}
+.ch .q{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700;white-space:nowrap}
+.ch .opts{flex-basis:100%;display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--muted);flex-wrap:wrap}
+.ch .opts input[type=number]{width:80px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:var(--bg)}
+.ch .opts label{display:flex;gap:6px;align-items:center}
+.rm{border:0;background:transparent;color:var(--muted);font-size:1.1rem;width:30px;height:30px;border-radius:8px}
+.totbox{background:var(--surface);border-radius:14px;padding:12px 14px;font-variant-numeric:tabular-nums;box-shadow:var(--shadow)}
+details.addfood{background:var(--surface);border-radius:14px;padding:10px 14px}
+details.addfood summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+@media (min-width:520px){.grid4{grid-template-columns:repeat(4,1fr)}}
+.mylist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.mylist div{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:6px 0}
+.mylist div span{flex:1;min-width:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.9rem;z-index:30}
 </style>
 
@@ -133,6 +163,7 @@ const FOODS = {
   farro:["Farro",335,15,67,2.5,"🌾","cer"],
   couscous:["Cous cous",360,12,72,1.5,"🥘","cer"],
   pane:["Pane integrale",240,9,45,2.5,"🍞","pane"],
+  pancarre:["Pancarrè integrale tostato",260,9,45,4,"🍞","pane"],
   patate:["Patate",85,2,18,0.1,"🥔","pat"],
   avena:["Fiocchi d'avena",370,13,60,7,"🥣"],
   fette:["Fette biscottate integrali",400,12,70,6,"🍞"],
@@ -144,7 +175,7 @@ const FOODS = {
   confettura:["Confettura extra",200,0.5,50,0,"🍓"],
   ciocc:["Cioccolato fondente 85%",600,10,20,50,"🍫"],
   frutta:["Frutta fresca di stagione",50,0.5,12,0.2,"🍎"],
-  verdure:["Verdure di stagione",25,1.5,4,0.2,"🥦"],
+  verdure:["Verdure di stagione",25,1.5,4,0.2,"🥦","verd"],
   pomodoro:["Passata di pomodoro",25,1.3,4,0.2,"🍅"],
   olio:["Olio extra vergine d'oliva",899,0,0,100,"🫒"],
   pollo:["Petto di pollo",100,23,0,1,"🍗"],
@@ -163,10 +194,49 @@ const FOODS = {
   noci:["Noci",650,15,7,65,"🌰"],
   bosco:["Frutti di bosco",40,1,7,0.3,"🫐"]
 };
+// alimenti in più per comporre i propri pasti (valori medi per 100 g)
+const MORE = {
+  pane_bianco:["Pane comune",275,9,57,1,"🥖","pane","C"],crackers:["Crackers integrali",420,10,70,10,"🍘",0,"C"],gallette:["Gallette di riso",380,8,80,3,"🍘",0,"C"],
+  grissini:["Grissini",410,12,68,9,"🥖",0,"C"],quinoa:["Quinoa",368,14,64,6,"🌾","cer","C"],orzo:["Orzo perlato",320,10,70,1.5,"🌾","cer","C"],
+  polenta:["Farina di mais (polenta)",360,8,77,2.7,"🌽","cer","C"],gnocchi:["Gnocchi di patate",140,3,30,0.3,"🥔",0,"C"],cornflakes:["Corn flakes",375,7,84,0.7,"🥣",0,"C"],
+  muesli:["Muesli",360,10,64,6,"🥣",0,"C"],biscotti:["Biscotti secchi",420,7,75,10,"🍪",0,"C"],piadina:["Piadina",300,8,50,8,"🫓",0,"C"],
+  patdolci:["Patate dolci",86,1.6,20,0.1,"🍠",0,"C"],zucchero:["Zucchero",392,0,100,0,"🍬",0,"C"],pizza:["Pizza margherita",270,11,33,10,"🍕",0,"C"],
+  crudo:["Prosciutto crudo",220,28,0,12,"🥓",0,"P"],cotto:["Prosciutto cotto",132,20,1,5,"🥓",0,"P"],bresaola:["Bresaola",151,32,0,2,"🥩",0,"P"],
+  lonza:["Lonza di maiale",150,22,0,6.5,"🥩",0,"P"],vitello:["Vitello",110,21,0,2.5,"🥩",0,"P"],hamburger:["Hamburger di manzo",220,18,0,17,"🍔",0,"P"],
+  gamberi:["Gamberi",70,14,0,0.7,"🦐",0,"P"],polpo:["Polpo",57,11,1.5,1,"🐙",0,"P"],orata:["Orata",120,20,0,4,"🐟",0,"P"],branzino:["Branzino",100,19,0,2.5,"🐟",0,"P"],
+  sgombro:["Sgombro",170,17,0,11,"🐟",0,"P"],tonnofr:["Tonno fresco",130,23,0,4.5,"🐟",0,"P"],albume:["Albume d'uovo",45,11,0,0,"🥚",0,"P"],
+  tempeh:["Tempeh",190,19,9,11,"🫛",0,"P"],seitan:["Seitan",120,24,4,1,"🫛",0,"P"],fiocchi:["Fiocchi di latte",100,12,3,4,"🧀",0,"P"],
+  skyr:["Skyr",63,11,4,0.2,"🥄",0,"P"],yogint:["Yogurt bianco intero",66,3.8,4.3,3.9,"🥄",0,"P"],primosale:["Primo sale",270,19,1,21,"🧀",0,"P"],
+  feta:["Feta",260,14,4,21,"🧀",0,"P"],stracchino:["Stracchino",300,19,0,25,"🧀",0,"P"],edamame:["Edamame",120,12,9,5,"🫛",0,"P"],
+  lenticchie:["Lenticchie cotte",116,9,20,0.4,"🫘",0,"U"],ceci:["Ceci cotti",140,7.5,22,2.5,"🫘",0,"U"],fagioli:["Fagioli cotti",110,7,19,0.5,"🫘",0,"U"],
+  piselli:["Piselli",70,5,12,0.4,"🫛",0,"U"],hummus:["Hummus",170,8,14,10,"🫘",0,"U"],
+  burroar:["Burro d'arachidi",590,25,15,50,"🥜",0,"F"],burro:["Burro",717,0.9,0.1,81,"🧈",0,"F"],olive:["Olive",145,1,4,15,"🫒",0,"F"],
+  nocciole:["Nocciole",650,14,7,61,"🌰",0,"F"],lino:["Semi di lino",530,18,2,42,"🌱",0,"F"],zuccasemi:["Semi di zucca",560,30,10,46,"🎃",0,"F"],
+  pistacchi:["Pistacchi",600,20,18,50,"🥜",0,"F"],anacardi:["Anacardi",590,18,30,46,"🥜",0,"F"],ciocc70:["Cioccolato fondente 70%",560,8,40,40,"🍫",0,"F"],
+  pesto:["Pesto",450,5,5,45,"🌿",0,"F"],
+  latteint:["Latte intero",64,3.3,4.8,3.6,"🥛","ml","X"],lattesoia:["Bevanda di soia",33,3,0.7,2,"🥛","ml","X"],latteavena:["Bevanda di avena",45,0.5,7,1.5,"🥛","ml","X"],
+  kefir:["Kefir",45,3.5,4,1.5,"🥛","ml","X"],mela:["Mela",52,0.3,14,0.2,"🍎","frut","X"],banana:["Banana",90,1.1,23,0.3,"🍌","frut","X"],
+  arancia:["Arancia",45,0.9,11,0.2,"🍊","frut","X"],kiwi:["Kiwi",60,1.1,15,0.5,"🥝","frut","X"],pera:["Pera",57,0.4,15,0.1,"🍐","frut","X"],uva:["Uva",70,0.6,17,0.2,"🍇","frut","X"],
+  insalata:["Insalata",15,1.5,2,0.2,"🥬","verd","X"],zucchine:["Zucchine",17,1.2,3,0.3,"🥒","verd","X"],pomodori:["Pomodori",18,0.9,3.5,0.2,"🍅","verd","X"],
+  spinaci:["Spinaci",23,2.9,3.6,0.4,"🥬","verd","X"],broccoli:["Broccoli",34,2.8,7,0.4,"🥦","verd","X"],carote:["Carote",41,0.9,10,0.2,"🥕","verd","X"],
+  peperoni:["Peperoni",26,1,6,0.3,"🫑","verd","X"],funghi:["Funghi",22,3,3,0.3,"🍄","verd","X"],melanzane:["Melanzane",25,1,6,0.2,"🍆","verd","X"]
+};
+const MORE_ROLE={};
+Object.entries(MORE).forEach(([k,v])=>{FOODS[k]=v.slice(0,7);if(!v[6])FOODS[k][6]=undefined;MORE_ROLE[k]=v[7]});
+FOODS.frutta[6]="frut"; FOODS.bosco[6]="frut";
 // ruolo nel bilanciamento: C = fonte di carboidrati, P = fonte di proteine, F = fonte di grassi, X = quantità fissa
-const ROLE = {pasta:"C",riso:"C",farro:"C",couscous:"C",pane:"C",patate:"C",avena:"C",fette:"C",miele:"C",confettura:"C",
+const ROLE = {pasta:"C",riso:"C",farro:"C",couscous:"C",pane:"C",pancarre:"C",patate:"C",avena:"C",fette:"C",miele:"C",confettura:"C",
   pollo:"P",tacchino:"P",manzo:"P",salmone:"P",merluzzo:"P",tonno:"P",uova:"P",legumi:"U",tofu:"P",ricotta:"P",mozzarella:"P",yogurt:"P",parmigiano:"P",
   olio:"F",mandorle:"F",chia:"F",ciocc:"F",avocado:"F",noci:"F"};
+Object.assign(ROLE,MORE_ROLE);
+// ruolo dedotto dai valori, per gli alimenti aggiunti a mano
+function autoRole(d){const k=Math.max(1,d[1]);if(d[2]*4/k>=0.35)return "P";if(d[4]*9/k>=0.5)return "F";if(d[3]*4/k>=0.5)return "C";return "X"}
+const roleOf=f=>ROLE[f]||autoRole(FOODS[f]);
+// alimenti e pasti creati dall'utente (restano su questo dispositivo)
+const SS={get(k,d){try{const v=localStorage.getItem("dsm_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("dsm_"+k,JSON.stringify(v))}catch(e){}}};
+let MYFOODS=SS.get("cibi",{}); Object.entries(MYFOODS).forEach(([k,v])=>{FOODS[k]=v});
+let MYMEALS=SS.get("pasti",[]);
+let CH=SS.get("scelte",{});
 const DIETS = {
   med:{l:"Mediterranea",d:"Equilibrata: carboidrati integrali, legumi, pesce, verdura e olio extra vergine. È quella consigliata dalle linee guida."},
   low:{l:"Low carb",d:"Carboidrati ridotti a circa un terzo delle calorie, più proteine e grassi buoni. Porzioni di pasta più piccole e cena senza pane né patate."},
@@ -174,6 +244,7 @@ const DIETS = {
 };
 // [alimento, grammi base, scalabile(1)/fisso(0)]
 const COL = [
+  {t:"Uovo e pancarrè integrale tostato",i:[["uova",60,0],["pancarre",30,1],["frutta",150,0]]},
   {t:"Avena, latte e chia",i:[["latte",200,0],["avena",40,1],["chia",10,1],["miele",10,1],["frutta",100,0]]},
   {t:"Yogurt greco con avena e frutta",i:[["yogurt",170,1],["avena",30,1],["frutta",150,0],["mandorle",15,1]]},
   {t:"Pane integrale, ricotta e miele",i:[["latte",200,0],["pane",60,1],["ricotta",60,1],["miele",10,1]]},
@@ -275,15 +346,16 @@ function compute(p){
 }
 function nutr(items){let k=0,P=0,C=0,G=0;items.forEach(([f,g])=>{const d=FOODS[f];k+=d[1]*g/100;P+=d[2]*g/100;C+=d[3]*g/100;G+=d[4]*g/100});return {k,P,C,G}}
 // Bilancia le grammature del pasto: le fonti proteiche puntano alle proteine, quelle di carboidrati ai carboidrati, i grassi chiudono le calorie
-function scaleMeal(tpl,share,r,veg,keto,noCarb){
+function scaleMeal(tpl,share,r,veg,keto,noCarb,wide){
   if(tpl.free) return {t:tpl.t,free:true,items:[],n:{k:0,P:0,C:0,G:0}};
+  if(wide){veg=false;noCarb=false}
   let src = noCarb ? tpl.i.filter(([f])=>ROLE[f]!=="C") : tpl.i;
   let items = src.map(([f,g,s])=>{if(veg&&VEG[f]){let [nf,m]=VEG[f];if(keto&&nf==="legumi"){nf="tofu";m=1.2}return [nf,g*m,s]}return [f,g,s]});
   const tP=r.prot*share, tC=r.carb*share, tK=r.kcal*share;
-  const role=(f,s)=>s?(ROLE[f]||"X"):"X";
+  const role=(f,s)=>s?roleOf(f):"X";
   const fac=items.map(()=>1);
   const sum=(key,filter)=>items.reduce((a,[f,g,s],i)=>filter(role(f,s))?a+FOODS[f][key]*g*fac[i]/100:a,0);
-  const lim={P:[0.75,1.8],C:[0.45,2.4],F:[0.3,3]};
+  const lim=wide?{P:[0.25,6],C:[0.15,6],F:[0.1,6]}:{P:[0.75,1.8],C:[0.45,2.4],F:[0.3,3]};
   for(let it=0;it<10;it++){
     [["P",2,tP],["C",3,tC],["F",1,tK]].forEach(([R,key,target])=>{
       const mine=items.reduce((a,[f,g,s],i)=>role(f,s)===R?a+FOODS[f][key]*g/100:a,0);
@@ -295,18 +367,28 @@ function scaleMeal(tpl,share,r,veg,keto,noCarb){
   }
   // se le calorie restano basse o alte, ritocca tutte le porzioni insieme
   const kNow=sum(1,x=>x!=="X"), kFix=sum(1,x=>x==="X"); // U (legumi) si muove solo qui
-  if(kNow>0){const u=Math.min(1.5,Math.max(0.8,(tK-kFix)/kNow));items.forEach(([f,g,s],i)=>{if(s)fac[i]*=u})}
+  if(kNow>0){const u=wide?Math.min(3,Math.max(0.4,(tK-kFix)/kNow)):Math.min(1.5,Math.max(0.8,(tK-kFix)/kNow));items.forEach(([f,g,s],i)=>{if(s)fac[i]*=u})}
   items = items.map(([f,g,s],i)=>{
     if(!s) return [f,g];
     let v=g*fac[i];
     if(f==="uova") v=Math.max(60,Math.round(v/60)*60);
     else if(f==="olio") v=Math.max(5,Math.round(v/5)*5);
     else v=Math.round(v/5)*5;
+    if(wide) v=Math.max(5,v);
     return [f,v];
   }).filter(([,g])=>g>0);
-  let title = veg&&tpl.vt?tpl.vt:tpl.t;
+  let title = veg&&tpl.vt?tpl.vt:tpl.t; if(wide) title=tpl.t;
   if(noCarb && src.length!==tpl.i.length){title=title.replace(/ (con|e) (patate|pane integrale|pane)$/,"");if(!/verdure/.test(title))title+=" e verdure"}
   return {t:title,items,n:nutr(items)};
+}
+// scelta del pasto: prima quella del singolo giorno, poi quella per tutti i giorni, poi il piano
+function pickTpl(slot,d,builtin,defIdx){
+  for(const key of [slot+"_"+d,slot]){
+    const v=CH[key]; if(!v||v==="rot") continue;
+    if(v.startsWith("u:")){const m=MYMEALS.find(x=>x.id===v.slice(2));if(m)return {tpl:m,custom:true}}
+    if(v.startsWith("b:")){const i=+v.slice(2);if(builtin[i])return {tpl:builtin[i]}}
+  }
+  return {tpl:builtin[defIdx]};
 }
 function buildWeek(p,r){
   const pct = p.pasti==="5"?{col:.20,sp1:.10,pra:.35,sp2:.10,cen:.25}:{col:.25,pra:.40,cen:.35};
@@ -314,11 +396,15 @@ function buildWeek(p,r){
   const T = keto?{col:COL_K,spu:SPU_K,pra:PRA_K,cen:CEN_K}:{col:COL,spu:SPU,pra:PRA,cen:CEN};
   return WD.map((_,d)=>{
     const meals=[];
-    meals.push({k:"col",name:"Colazione",cls:"col",...scaleMeal(T.col[d%T.col.length],pct.col,r,veg,keto)});
-    if(pct.sp1) meals.push({k:"sp1",name:"Spuntino",cls:"spu",...scaleMeal(T.spu[d%T.spu.length],pct.sp1,r,veg,keto)});
-    meals.push({k:"pra",name:"Pranzo",cls:"pra",...scaleMeal(T.pra[d],pct.pra,r,veg,keto)});
-    if(pct.sp2) meals.push({k:"sp2",name:"Merenda",cls:"spu",...scaleMeal(T.spu[(d+1)%T.spu.length],pct.sp2,r,veg,keto)});
-    meals.push({k:"cen",name:"Cena",cls:"cen",...scaleMeal(T.cen[d],pct.cen,r,veg,keto,p.dieta==="low")});
+    const add=(k,name,cls,slot,builtin,defIdx,share,noCarb)=>{
+      const pk=pickTpl(slot,d,builtin,defIdx);
+      meals.push({k,name,cls,slot,custom:!!pk.custom,...scaleMeal(pk.tpl,share,r,veg,keto,noCarb&&!pk.custom,pk.custom)});
+    };
+    add("col","Colazione","col","col",T.col,d%T.col.length,pct.col);
+    if(pct.sp1) add("sp1","Spuntino","spu","spu",T.spu,d%T.spu.length,pct.sp1);
+    add("pra","Pranzo","pra","pra",T.pra,d,pct.pra);
+    if(pct.sp2) add("sp2","Merenda","spu","spu",T.spu,(d+1)%T.spu.length,pct.sp2);
+    add("cen","Cena","cen","cen",T.cen,d,pct.cen,p.dieta==="low");
     const tot=meals.reduce((a,m)=>({k:a.k+m.n.k,P:a.P+m.n.P,C:a.C+m.n.C,G:a.G+m.n.G}),{k:0,P:0,C:0,G:0});
     return {meals,tot,free:meals.some(m=>m.free)};
   });
@@ -341,6 +427,7 @@ function swapsFor(f,g){
 const S={get(k,d){try{const v=localStorage.getItem("dsm_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("dsm_"+k,JSON.stringify(v))}catch(e){}}};
 const EXAMPLE={sesso:"F",eta:42,alt:165,peso:68,att:"leg",obi:"giu",dieta:"med",alim:"onn",pasti:"5",clin:false};
 let profile = S.get("profilo",null), isExample=!profile; if(!profile) profile={...EXAMPLE}; if(!profile.dieta) profile.dieta="med";
+if(profile.col_std!==undefined&&CH.col===undefined){CH.col=profile.col_std==="rot"?"rot":"b:"+profile.col_std;SS.set("scelte",CH)}
 let day = (new Date().getDay()+6)%7;
 let tab = "piano";
 const app=document.getElementById("app");
@@ -367,6 +454,24 @@ function summaryCard(r){
     <p class="small" style="margin:12px 0 0">Piano indicativo calcolato con formule standard. Non sostituisce un nutrizionista.</p>
   </div>`;
 }
+const SLOTN={col:"Colazione",spu:"Spuntino",pra:"Pranzo",cen:"Cena"};
+function curChoice(slot){return CH[slot+"_"+day]||CH[slot]||"rot"}
+function mealPicker(m,mi){
+  const keto=profile.dieta==="keto";
+  const builtin = m.slot==="col"?(keto?COL_K:COL):m.slot==="spu"?(keto?SPU_K:SPU):null;
+  const mine=MYMEALS.filter(x=>x.slot===m.slot);
+  const perDay = m.slot==="pra"||m.slot==="cen";
+  const key = perDay ? m.slot+"_"+day : m.slot;
+  const cur = CH[key]||(perDay?CH[m.slot]:null)||"rot";
+  const b=(v,l,extra="")=>`<button data-ch="${key}|${v}" aria-pressed="${cur===v}">${l}${extra}</button>`;
+  return `<div class="colpick" id="pick-${mi}" hidden>
+    <p class="small" style="margin:0 0 6px">${perDay?`Scegli cosa mangiare ${WDL[day].toLowerCase()} a ${m.slot==="pra"?"pranzo":"cena"}.`:`Vale per tutti i giorni.`} Le grammature si adattano da sole.</p>
+    ${b("rot",perDay?"Quello del piano":"A rotazione (uno diverso ogni giorno)")}
+    ${builtin?builtin.map((c,i)=>b("b:"+i,esc(c.t))).join(""):""}
+    ${mine.map(x=>b("u:"+x.id,"⭐ "+esc(x.t))).join("")}
+    <button class="newmeal" data-new="${m.slot}">+ Crea un pasto con i tuoi alimenti</button>
+  </div>`;
+}
 function renderPiano(){
   if(profile.clin){
     app.innerHTML=`<h1 class="big">Serve un professionista</h1><div class="card" style="margin-top:18px;max-width:640px"><p style="margin-top:0">Hai indicato gravidanza, allattamento o una condizione medica. In questi casi il fabbisogno cambia molto e un piano automatico può essere sbagliato o rischioso.</p><p>Rivolgiti a un medico, un biologo nutrizionista o un dietista. Se ti sei sbagliata, togli la spunta in <a href="#profilo" style="color:var(--accent)">Profilo</a>.</p></div>`;return;
@@ -378,14 +483,106 @@ function renderPiano(){
       <div class="days" role="group" aria-label="Giorno">${WD.map((w,i)=>`<button data-d="${i}" aria-pressed="${i===day}">${w}<small>${fmt(week[i].tot.k)}</small></button>`).join("")}</div>
       <div class="daytot"><h3>${WDL[day]}</h3><span>${fmt(d.tot.k)} kcal · P ${fmt(d.tot.P)} g · C ${fmt(d.tot.C)} g · G ${fmt(d.tot.G)} g${d.free?" · pasto libero escluso":""}</span></div>
       <div class="meals">${d.meals.map((m,mi)=>`<section class="meal ${m.cls}">
-        <div class="meal-head"><div><b>${m.name}</b><div class="t">${esc(m.t)}</div></div><span class="k">${m.free?"":fmt(m.n.k)+" kcal"}</span></div>
+        <div class="meal-head"><div><b>${m.name}</b><div class="t">${esc(m.t)}</div></div><span class="k">${m.free?"":fmt(m.n.k)+" kcal"}</span><button class="cambia" data-pick="${mi}" aria-expanded="false">Cambia</button></div>
+        ${mealPicker(m,mi)}
         ${m.free?`<div class="free">Mangia quello che ti va, con misura e senza sensi di colpa. Se puoi, inizia con della verdura.</div>`:
         `<ul class="items">${m.items.map(([f,g],ii)=>{const sw=swapsFor(f,g);return `<li class="${sw?"has-sw":""}"><span aria-hidden="true">${FOODS[f][5]}</span><span class="n">${FOODS[f][0]}</span><span class="q">${qLabel(f,g)}</span>${sw?`<button class="sw" data-sw="${mi}-${ii}" aria-expanded="false" aria-label="Alternative a ${FOODS[f][0]}">⇆</button><div class="swaps" id="sw-${mi}-${ii}" hidden>${sw.map(([n,q])=>`<span class="chip">${n} ${q} g</span>`).join("")}</div>`:""}</li>`}).join("")}</ul>`}
       </section>`).join("")}</div>
       <p class="small">Tutti i pesi sono a crudo, tranne i legumi che sono cotti.${profile.dieta==="keto"?"":" ⇆ mostra le alternative equivalenti per cereali, pane e patate."}</p>
     </div></div>`;
   app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{day=+b.dataset.d;renderPiano()});
+  app.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{const el=document.getElementById("pick-"+b.dataset.pick);el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden))});
+  app.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{const [k,v]=b.dataset.ch.split("|");if(v==="rot"){delete CH[k];if(k.includes("_")&&CH[k.split("_")[0]])CH[k]="rot"}else CH[k]=v;SS.set("scelte",CH);toast("Pasto aggiornato");renderPiano()});
+  app.querySelectorAll("[data-new]").forEach(b=>b.onclick=()=>openComposer(b.dataset.new));
   app.querySelectorAll("[data-sw]").forEach(b=>b.onclick=()=>{const el=document.getElementById("sw-"+b.dataset.sw);el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden))});
+}
+
+// ===== COMPOSITORE DI PASTI =====
+function defaultItem(f){
+  const r=roleOf(f), c=FOODS[f][6];
+  if(r==="X"){const g=c==="verd"?200:c==="ml"?200:f==="bosco"?100:150;return [f,g,0]}
+  if(f==="uova") return [f,60,1];
+  return [f,Math.max(20,Math.min(300,Math.round(10000/Math.max(40,FOODS[f][1])/5)*5)),1];
+}
+function shareOf(slot){const pct=profile.pasti==="5"?{col:.20,spu:.10,pra:.35,cen:.25}:{col:.25,spu:.10,pra:.40,cen:.35};return pct[slot]}
+function openComposer(slot,editId){
+  const r=compute(profile);
+  const ed=editId?MYMEALS.find(m=>m.id===editId):null;
+  let st={t:ed?ed.t:"",slot:ed?ed.slot:slot||"col",items:ed?ed.i.map(x=>[...x]):[],q:"",when:"tutti"};
+  const bd=document.createElement("div");bd.className="backdrop";
+  document.body.appendChild(bd);
+  const close=()=>{bd.remove();document.removeEventListener("keydown",onKey)};
+  const onKey=e=>{if(e.key==="Escape")close()};document.addEventListener("keydown",onKey);
+  bd.addEventListener("click",e=>{if(e.target===bd)close()});
+  function draw(){
+    const share=shareOf(st.slot), res=st.items.length?scaleMeal({t:st.t,i:st.items},share,r,false,profile.dieta==="keto",false,true):null;
+    const target=r.kcal*share;
+    const warn=[];
+    if(res){
+      const hasP=st.items.some(([f,,s])=>["P","U"].includes(roleOf(f)));
+      if((st.slot==="pra"||st.slot==="cen")&&!hasP) warn.push("Manca una fonte di proteine: carne, pesce, uova, legumi, formaggi o tofu.");
+      if((st.slot==="pra"||st.slot==="cen")&&!st.items.some(([f])=>FOODS[f][6]==="verd")) warn.push("Aggiungi delle verdure: saziano e hanno poche calorie.");
+      if(Math.abs(res.n.k-target)>target*0.15) warn.push(res.n.k>target?"Le quantità fisse superano già le calorie del pasto: riducile o togline qualcuna.":"Con questi alimenti non arrivo alle calorie del pasto: aggiungine uno.");
+      if(profile.dieta==="keto"&&res.n.C>15) warn.push("Troppi carboidrati per la chetogenica.");
+    }
+    const gOf=f=>{if(!res)return null;const it=res.items.find(x=>x[0]===f);return it?it[1]:null};
+    const q=st.q.trim().toLowerCase();
+    const found=q?Object.keys(FOODS).filter(f=>FOODS[f][0].toLowerCase().includes(q)&&!st.items.some(x=>x[0]===f)).slice(0,10):[];
+    bd.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Crea un pasto">
+      <div class="sheet-top"><h2>${ed?"Modifica il pasto":"Crea un pasto"}</h2><button class="x" id="cx" aria-label="Chiudi">✕</button></div>
+      <label class="f">Nome del pasto<input id="cn" value="${esc(st.t)}" placeholder="Es. Uovo e pancarrè"></label>
+      <fieldset><legend>Per</legend><div class="seg">${Object.entries(SLOTN).map(([k,l])=>`<input type="radio" name="cslot" id="cs-${k}" value="${k}" ${st.slot===k?"checked":""}><label for="cs-${k}">${l}</label>`).join("")}</div></fieldset>
+      <label class="f">Aggiungi un alimento<input id="cq" value="${esc(st.q)}" placeholder="Cerca: uovo, pancarrè, ricotta…" autocomplete="off"></label>
+      ${found.length?`<div class="results">${found.map(f=>`<button data-add="${f}"><span aria-hidden="true">${FOODS[f][5]||"🍽️"}</span>${esc(FOODS[f][0])}<small>${FOODS[f][1]} kcal/100 g</small></button>`).join("")}</div>`:q?`<p class="small" style="margin:0">Nessun alimento trovato. Aggiungilo qui sotto con i valori dell'etichetta.</p>`:""}
+      <div class="chosen">${st.items.map(([f,g,s],i)=>`<div class="ch"><span aria-hidden="true">${FOODS[f][5]||"🍽️"}</span><span class="n">${esc(FOODS[f][0])}</span><span class="q">${gOf(f)!=null?qLabel(f,gOf(f)):""}</span><button class="rm" data-rm="${i}" aria-label="Togli ${esc(FOODS[f][0])}">✕</button>
+        <div class="opts"><label><input type="checkbox" data-fix="${i}" ${s?"":"checked"}> Quantità fissa</label>${s?`<span>calcolata dall'app</span>`:`<label><input type="number" min="5" step="5" data-g="${i}" value="${g}" id="g-${i}"> ${FOODS[f][6]==="ml"?"ml":"g"}</label>`}</div></div>`).join("")}</div>
+      ${res?`<div class="totbox"><b>${fmt(res.n.k)} kcal</b> su ${fmt(target)} previste per ${SLOTN[st.slot].toLowerCase()} · P ${fmt(res.n.P)} g · C ${fmt(res.n.C)} g · G ${fmt(res.n.G)} g</div>`:`<p class="small" style="margin:0">Cerca e aggiungi gli alimenti: le grammature compaiono subito. Spunta "Quantità fissa" per ciò che vuoi sempre uguale, per esempio 1 uovo.</p>`}
+      ${warn.map(w=>`<div class="alert warn" style="margin:0">${w}</div>`).join("")}
+      <details class="addfood"><summary>Non trovi un alimento? Aggiungilo</summary>
+        <p class="small">Copia i valori per 100 g dall'etichetta.</p>
+        <label class="f">Nome<input id="nf-n" placeholder="Es. Pancarrè integrale Mulino"></label>
+        <div class="grid4"><label class="f">Kcal<input id="nf-k" type="number" inputmode="decimal"></label><label class="f">Proteine g<input id="nf-p" type="number" inputmode="decimal"></label><label class="f">Carboidrati g<input id="nf-c" type="number" inputmode="decimal"></label><label class="f">Grassi g<input id="nf-g" type="number" inputmode="decimal"></label></div>
+        <div class="err" id="nf-err"></div>
+        <button class="btn ghost" id="nf-save" type="button">Aggiungi al pasto</button>
+      </details>
+      ${(st.slot==="pra"||st.slot==="cen")?`<fieldset><legend>Usalo</legend><div class="seg"><input type="radio" name="cwhen" id="cw-giorno" value="giorno" ${st.when==="giorno"?"checked":""}><label for="cw-giorno">Solo ${WDL[day].toLowerCase()}</label><input type="radio" name="cwhen" id="cw-tutti" value="tutti" ${st.when==="tutti"?"checked":""}><label for="cw-tutti">Tutti i giorni</label><input type="radio" name="cwhen" id="cw-no" value="no" ${st.when==="no"?"checked":""}><label for="cw-no">Salvalo e basta</label></div></fieldset>`:`<fieldset><legend>Usalo</legend><div class="seg"><input type="radio" name="cwhen" id="cw-tutti" value="tutti" ${st.when!=="no"?"checked":""}><label for="cw-tutti">Tutti i giorni</label><input type="radio" name="cwhen" id="cw-no" value="no" ${st.when==="no"?"checked":""}><label for="cw-no">Salvalo e basta</label></div></fieldset>`}
+      <div class="err" id="c-err" role="alert"></div>
+      <div class="actions" style="margin:0"><button class="btn" id="csave">Salva il pasto</button>${ed?`<button class="btn ghost" id="cdel">Elimina</button>`:""}</div>
+    </div>`;
+    const $=id=>bd.querySelector("#"+id);
+    $("cx").onclick=close;
+    $("cn").oninput=e=>{st.t=e.target.value};
+    bd.querySelectorAll('input[name="cslot"]').forEach(i=>i.onchange=()=>{st.slot=i.value;draw()});
+    bd.querySelectorAll('input[name="cwhen"]').forEach(i=>i.onchange=()=>{st.when=i.value});
+    const cq=$("cq");cq.oninput=e=>{st.q=e.target.value;const pos=e.target.selectionStart;draw();const n=bd.querySelector("#cq");n.focus();n.setSelectionRange(pos,pos)};
+    bd.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{st.items.push(defaultItem(b.dataset.add));st.q="";draw()});
+    bd.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{st.items.splice(+b.dataset.rm,1);draw()});
+    bd.querySelectorAll("[data-fix]").forEach(c=>c.onchange=()=>{const i=+c.dataset.fix,it=st.items[i];if(c.checked){it[2]=0;it[1]=gOf(it[0])||it[1]}else{it[2]=1;it[1]=defaultItem(it[0])[1]}draw()});
+    bd.querySelectorAll("[data-g]").forEach(inp=>inp.onchange=()=>{const v=+inp.value;if(v>0){st.items[+inp.dataset.g][1]=v;draw()}});
+    $("nf-save").onclick=()=>{
+      const n=$("nf-n").value.trim(),num=id=>parseFloat(String($(id).value).replace(",","."));
+      const k=num("nf-k"),P=num("nf-p")||0,C=num("nf-c")||0,G=num("nf-g")||0;
+      if(!n){$("nf-err").textContent="Scrivi il nome dell'alimento.";return}
+      if(!(k>0)){$("nf-err").textContent="Inserisci le calorie per 100 g.";return}
+      const id="u"+Date.now().toString(36);
+      MYFOODS[id]=[n,k,P,C,G,"⭐"];FOODS[id]=MYFOODS[id];SS.set("cibi",MYFOODS);
+      st.items.push(defaultItem(id));draw();toast("Alimento aggiunto");
+    };
+    $("csave").onclick=()=>{
+      if(!st.items.length){$("c-err").textContent="Aggiungi almeno un alimento.";return}
+      const t=st.t.trim()||st.items.map(([f])=>FOODS[f][0]).slice(0,3).join(", ");
+      let id;
+      if(ed){ed.t=t;ed.slot=st.slot;ed.i=st.items;id=ed.id}
+      else{id="m"+Date.now().toString(36);MYMEALS.push({id,t,slot:st.slot,i:st.items})}
+      SS.set("pasti",MYMEALS);
+      if(st.when==="tutti"){CH[st.slot]="u:"+id;for(let d=0;d<7;d++)delete CH[st.slot+"_"+d]}
+      else if(st.when==="giorno") CH[st.slot+"_"+day]="u:"+id;
+      SS.set("scelte",CH);close();toast("Pasto salvato");go(tab);
+    };
+    if(ed) $("cdel").onclick=()=>{MYMEALS=MYMEALS.filter(m=>m.id!==ed.id);SS.set("pasti",MYMEALS);Object.keys(CH).forEach(k=>{if(CH[k]==="u:"+ed.id)delete CH[k]});SS.set("scelte",CH);close();toast("Pasto eliminato");go(tab)};
+  }
+  draw();
+  setTimeout(()=>{const n=bd.querySelector(st.items.length?"#cn":"#cq");if(n)n.focus()},0);
 }
 
 // ===== VISTA PROFILO =====
@@ -406,7 +603,13 @@ function renderProfilo(){
     <label class="chk"><input type="checkbox" id="clin" ${p.clin?"checked":""}><span>Sono in gravidanza o allattamento, oppure ho una condizione medica (diabete, malattie renali, tiroide, altro)</span></label>
     <div class="err" id="err" role="alert"></div>
     <div class="actions"><button class="btn" type="submit">Calcola il mio piano</button>${!isExample?`<button class="btn ghost" type="button" id="reset">Cancella i miei dati</button>`:""}</div>
-  </form></div>`;
+  </form></div>
+  <div class="card" style="margin-top:16px;max-width:640px"><h2>I miei pasti</h2>
+    ${MYMEALS.length?`<div class="mylist">${MYMEALS.map(m=>`<div><span><b>${esc(m.t)}</b><br><span class="small">${SLOTN[m.slot]}</span></span><button class="btn ghost" data-edit="${m.id}" type="button">Modifica</button></div>`).join("")}</div>`:`<p class="small" style="margin:0">Non hai ancora creato pasti. Componine uno con gli alimenti che preferisci: l'app calcola le grammature.</p>`}
+    <div class="actions"><button class="btn" type="button" id="newm">+ Crea un pasto</button></div>
+  </div>`;
+  document.getElementById("newm").onclick=()=>openComposer("col");
+  app.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openComposer(null,b.dataset.edit));
   const form=document.getElementById("pf");
   form.onsubmit=e=>{
     e.preventDefault();
