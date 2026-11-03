@@ -1,0 +1,464 @@
+<title>Dieta su misura</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: colonna unica su telefono; su PC profilo/riepilogo a sinistra e piano del giorno a destra. Tab in basso. */
+:root{
+  --bg:#EEF2EE; --surface:#FFFFFF; --fg:#1D2A23; --muted:#5E6E65; --line:#DCE3DD;
+  --accent:#2F6E50; --accent-soft:#D9EADF; --warn:#8A5A12; --warn-soft:#F6E7C9; --stop:#8E2F2F; --stop-soft:#F5DADA;
+  --m-col:#EFE2C8; --m-col-fg:#6B4F1D; --m-spu:#E3E9D3; --m-spu-fg:#4C5E22;
+  --m-pra:#F5D9D0; --m-pra-fg:#8A3B27; --m-cen:#D7E3EF; --m-cen-fg:#2B4E73;
+  --shadow:0 1px 2px rgba(29,42,35,.06),0 6px 20px rgba(29,42,35,.06);
+  --display:"Young Serif",Georgia,"Times New Roman",serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141A17; --surface:#1D2520; --fg:#E6EDE8; --muted:#9AABA1; --line:#2C3731;
+  --accent:#7CC39C; --accent-soft:#24392D; --warn:#E9C27A; --warn-soft:#3A2F1A; --stop:#F0A3A3; --stop-soft:#3D2222;
+  --m-col:#3A3222; --m-col-fg:#E8CF9E; --m-spu:#2C3320; --m-spu-fg:#C9D9A0;
+  --m-pra:#3D2722; --m-pra-fg:#F0B3A2; --m-cen:#1F2E3D; --m-cen-fg:#A9C6E6;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141A17; --surface:#1D2520; --fg:#E6EDE8; --muted:#9AABA1; --line:#2C3731;
+  --accent:#7CC39C; --accent-soft:#24392D; --warn:#E9C27A; --warn-soft:#3A2F1A; --stop:#F0A3A3; --stop-soft:#3D2222;
+  --m-col:#3A3222; --m-col-fg:#E8CF9E; --m-spu:#2C3320; --m-spu-fg:#C9D9A0;
+  --m-pra:#3D2722; --m-pra-fg:#F0B3A2; --m-cen:#1F2E3D; --m-cen-fg:#A9C6E6;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 110px}
+h1.big{font-family:var(--display);font-weight:400;font-size:clamp(1.7rem,5vw,2.4rem);line-height:1.1;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0}
+.grid{display:grid;gap:16px;grid-template-columns:1fr;margin-top:18px}
+@media (min-width:900px){.grid{grid-template-columns:340px 1fr;align-items:start}}
+.card{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:18px;min-width:0}
+.card h2{margin:0 0 10px;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kcal{font-family:var(--display);font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.kcal small{font-family:var(--body);font-size:1rem;color:var(--muted)}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.macros div{background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+.macros b{display:block;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.macros span{font-size:.78rem;color:var(--muted)}
+.facts{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:14px;font-size:.92rem;font-variant-numeric:tabular-nums}
+.facts span:nth-child(even){text-align:right;font-weight:600}
+.pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.alert{border-radius:14px;padding:12px 14px;font-size:.92rem;margin-top:12px}
+.alert.warn{background:var(--warn-soft);color:var(--warn)}
+.alert.stop{background:var(--stop-soft);color:var(--stop)}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.days button{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 12px;min-width:56px;font-weight:600;flex:none}
+.days button small{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.days button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.days button[aria-pressed="true"] small{color:var(--surface)}
+.daytot{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:14px 2px 10px;flex-wrap:wrap}
+.daytot h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.4rem}
+.daytot span{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.meals{display:grid;gap:12px}
+@media (min-width:1100px){.meals{grid-template-columns:1fr 1fr}}
+.meal{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.meal-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--mc);color:var(--mcf)}
+.meal-head b{font-family:var(--display);font-weight:400;font-size:1.1rem}
+.meal-head .t{font-size:.88rem;opacity:.9}
+.meal-head .k{margin-left:auto;font-size:.82rem;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.col{--mc:var(--m-col);--mcf:var(--m-col-fg)} .spu{--mc:var(--m-spu);--mcf:var(--m-spu-fg)} .pra{--mc:var(--m-pra);--mcf:var(--m-pra-fg)} .cen{--mc:var(--m-cen);--mcf:var(--m-cen-fg)}
+.items{list-style:none;margin:0;padding:4px 16px 8px}
+.items li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.items li:last-child{border-bottom:0}
+.items .n{flex:1;min-width:0}
+.items .q{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.sw{border:0;background:var(--mc);color:var(--mcf);width:32px;height:32px;border-radius:10px;flex:none}
+.swaps{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
+.items li.has-sw{flex-wrap:wrap}
+.chip{background:var(--accent-soft);border-radius:999px;padding:3px 10px;font-size:.84rem;font-variant-numeric:tabular-nums}
+.free{padding:14px 16px;color:var(--muted)}
+/* form */
+form{display:grid;gap:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:.9rem}
+label.f input,label.f select{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;font-weight:400;width:100%;min-width:0}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;font-size:.9rem;background:var(--bg)}
+.seg input:checked+label{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+legend{font-weight:600;font-size:.9rem;margin-bottom:6px;padding:0}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:.9rem}
+.chk input{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:1px}
+.btn{border:0;background:var(--accent);color:var(--surface);padding:12px 18px;border-radius:12px;font-weight:700}
+.btn.ghost{background:var(--accent-soft);color:var(--fg)}
+.err{color:var(--stop);font-size:.88rem;min-height:1em}
+.small{font-size:.85rem;color:var(--muted)}
+/* spesa */
+.shop{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:6px 16px;max-width:720px;margin-top:16px}
+.shop label{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.shop label:last-child{border-bottom:0}
+.shop input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.shop .n{flex:1;min-width:0}
+.shop .q{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.shop label.done .n,.shop label.done .q{text-decoration:line-through;opacity:.55}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+/* consigli */
+.advice{display:grid;gap:14px;grid-template-columns:1fr;margin-top:16px}
+@media (min-width:860px){.advice{grid-template-columns:1fr 1fr}}
+.advice article{background:var(--surface);border-radius:20px;padding:18px 20px;box-shadow:var(--shadow);min-width:0}
+.advice h3{margin:0 0 10px;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.advice ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;max-width:65ch}
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;gap:6px;padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));z-index:5}
+nav.tabs button{border:0;background:transparent;flex:0 1 140px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;border-radius:12px;color:var(--muted);font-size:.78rem;font-weight:600}
+nav.tabs .i{font-size:1.2rem}
+nav.tabs button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.9rem;z-index:30}
+</style>
+
+<div class="wrap" id="app"></div>
+<nav class="tabs" aria-label="Sezioni">
+  <button data-tab="piano"><span class="i" aria-hidden="true">🍽️</span>Piano</button>
+  <button data-tab="profilo"><span class="i" aria-hidden="true">👤</span>Profilo</button>
+  <button data-tab="spesa"><span class="i" aria-hidden="true">🛒</span>Spesa</button>
+  <button data-tab="consigli"><span class="i" aria-hidden="true">📖</span>Consigli</button>
+</nav>
+
+<script>
+// ===== ALIMENTI: kcal, proteine, carboidrati, grassi per 100 g (valori medi tabelle CREA) =====
+const FOODS = {
+  pasta:["Pasta (integrale o semola)",353,12,71,1.5,"🍝","cer"],
+  riso:["Riso",360,7,80,0.6,"🍚","cer"],
+  farro:["Farro",335,15,67,2.5,"🌾","cer"],
+  couscous:["Cous cous",360,12,72,1.5,"🥘","cer"],
+  pane:["Pane integrale",240,9,45,2.5,"🍞","pane"],
+  patate:["Patate",85,2,18,0.1,"🥔","pat"],
+  avena:["Fiocchi d'avena",370,13,60,7,"🥣"],
+  fette:["Fette biscottate integrali",400,12,70,6,"🍞"],
+  latte:["Latte parzialmente scremato",46,3.4,5,1.6,"🥛","ml"],
+  yogurt:["Yogurt greco 0%",57,10,4,0.4,"🥄"],
+  chia:["Semi di chia",490,17,8,31,"🌱"],
+  mandorle:["Mandorle",600,22,5,52,"🥜"],
+  miele:["Miele",304,0.6,80,0,"🍯"],
+  confettura:["Confettura extra",200,0.5,50,0,"🍓"],
+  ciocc:["Cioccolato fondente 85%",600,10,20,50,"🍫"],
+  frutta:["Frutta fresca di stagione",50,0.5,12,0.2,"🍎"],
+  verdure:["Verdure di stagione",25,1.5,4,0.2,"🥦"],
+  pomodoro:["Passata di pomodoro",25,1.3,4,0.2,"🍅"],
+  olio:["Olio extra vergine d'oliva",899,0,0,100,"🫒"],
+  pollo:["Petto di pollo",100,23,0,1,"🍗"],
+  tacchino:["Fesa di tacchino",107,24,0,1.2,"🍗"],
+  manzo:["Manzo magro",130,21,0,5,"🥩"],
+  salmone:["Salmone",185,20,0,12,"🐟"],
+  merluzzo:["Merluzzo",71,17,0,0.3,"🐟"],
+  tonno:["Tonno al naturale",103,25,0,0.8,"🐟"],
+  uova:["Uova",128,12.4,0,8.7,"🥚"],
+  legumi:["Legumi cotti (ceci, lenticchie, fagioli)",110,7,18,0.6,"🫘"],
+  tofu:["Tofu",120,13,2,7,"🫛"],
+  ricotta:["Ricotta vaccina",146,9,3.5,11,"🧀"],
+  mozzarella:["Mozzarella",250,18,1,19.5,"🧀"],
+  parmigiano:["Parmigiano",390,33,0,28,"🧀"],
+  avocado:["Avocado",160,2,2,15,"🥑"],
+  noci:["Noci",650,15,7,65,"🌰"],
+  bosco:["Frutti di bosco",40,1,7,0.3,"🫐"]
+};
+// ruolo nel bilanciamento: C = fonte di carboidrati, P = fonte di proteine, F = fonte di grassi, X = quantità fissa
+const ROLE = {pasta:"C",riso:"C",farro:"C",couscous:"C",pane:"C",patate:"C",avena:"C",fette:"C",miele:"C",confettura:"C",
+  pollo:"P",tacchino:"P",manzo:"P",salmone:"P",merluzzo:"P",tonno:"P",uova:"P",legumi:"U",tofu:"P",ricotta:"P",mozzarella:"P",yogurt:"P",parmigiano:"P",
+  olio:"F",mandorle:"F",chia:"F",ciocc:"F",avocado:"F",noci:"F"};
+const DIETS = {
+  med:{l:"Mediterranea",d:"Equilibrata: carboidrati integrali, legumi, pesce, verdura e olio extra vergine. È quella consigliata dalle linee guida."},
+  low:{l:"Low carb",d:"Carboidrati ridotti a circa un terzo delle calorie, più proteine e grassi buoni. Porzioni di pasta più piccole e cena senza pane né patate."},
+  keto:{l:"Chetogenica",d:"Carboidrati sotto i 30 g al giorno: niente pasta, pane, patate e frutta zuccherina. Andrebbe seguita con un medico o un nutrizionista."}
+};
+// [alimento, grammi base, scalabile(1)/fisso(0)]
+const COL = [
+  {t:"Avena, latte e chia",i:[["latte",200,0],["avena",40,1],["chia",10,1],["miele",10,1],["frutta",100,0]]},
+  {t:"Yogurt greco con avena e frutta",i:[["yogurt",170,1],["avena",30,1],["frutta",150,0],["mandorle",15,1]]},
+  {t:"Pane integrale, ricotta e miele",i:[["latte",200,0],["pane",60,1],["ricotta",60,1],["miele",10,1]]},
+  {t:"Fette biscottate e confettura",i:[["latte",200,0],["fette",35,1],["confettura",20,1],["mandorle",10,1]]}
+];
+const SPU = [
+  {t:"Frutta e mandorle",i:[["frutta",150,0],["mandorle",15,1]]},
+  {t:"Yogurt e frutta",i:[["yogurt",170,1],["frutta",100,0]]},
+  {t:"Frutta e cioccolato",i:[["frutta",150,0],["ciocc",10,1]]}
+];
+// Settimana costruita sulle frequenze delle linee guida: pesce 3, carne bianca 2, carne rossa 1, legumi 3, uova 1, formaggi 2, 1 pasto libero
+const PRA = [
+  {t:"Pasta e legumi",i:[["pasta",70,1],["legumi",150,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Riso con pollo e verdure",vt:"Riso con tofu e verdure",i:[["riso",80,1],["pollo",100,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Cous cous con tonno e verdure",vt:"Cous cous con uova e verdure",i:[["couscous",80,1],["tonno",80,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Farro con ceci e verdure",i:[["farro",70,1],["legumi",150,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Pasta al pomodoro e mozzarella",i:[["pasta",80,1],["pomodoro",100,0],["mozzarella",70,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Riso con tofu e verdure",i:[["riso",80,1],["tofu",120,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Pasta con lenticchie",i:[["pasta",70,1],["legumi",150,1],["verdure",200,0],["olio",10,1]]}
+];
+const CEN = [
+  {t:"Salmone al forno con patate",vt:"Tofu al forno con patate",i:[["salmone",120,1],["patate",200,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Frittata con verdure e pane",i:[["uova",120,1],["pane",50,1],["verdure",200,0],["olio",5,1]]},
+  {t:"Fesa di tacchino e pane integrale",vt:"Legumi in umido e pane integrale",i:[["tacchino",130,1],["pane",60,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Merluzzo al limone e patate",vt:"Uova sode e patate",i:[["merluzzo",180,1],["patate",250,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Straccetti di manzo e pane",vt:"Polpette di legumi e pane",i:[["manzo",120,1],["pane",60,1],["verdure",200,0],["olio",10,1]]},
+  {t:"Ricotta, verdure e pane",i:[["ricotta",120,1],["pane",60,1],["verdure",200,0],["olio",5,1]]},
+  {t:"Pasto libero",free:true}
+];
+// Settimana chetogenica: niente cereali, pane, patate, legumi e frutta zuccherina
+const COL_K = [
+  {t:"Uova strapazzate e avocado",i:[["uova",120,1],["avocado",60,1],["verdure",100,0]]},
+  {t:"Yogurt greco, noci e frutti di bosco",i:[["yogurt",170,1],["noci",20,1],["bosco",80,0]]},
+  {t:"Omelette al parmigiano",i:[["uova",120,1],["parmigiano",15,1],["olio",5,1],["verdure",100,0]]}
+];
+const SPU_K = [
+  {t:"Parmigiano e noci",i:[["parmigiano",20,1],["noci",15,1]]},
+  {t:"Yogurt greco e semi di chia",i:[["yogurt",150,1],["chia",10,1]]}
+];
+const PRA_K = [
+  {t:"Pollo con verdure e avocado",vt:"Tofu con verdure e avocado",i:[["pollo",130,1],["avocado",50,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Salmone con insalata mista",vt:"Uova sode con insalata mista",i:[["salmone",130,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Frittata di verdure",i:[["uova",180,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Insalata di tonno e noci",vt:"Insalata di uova e noci",i:[["tonno",100,1],["noci",15,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Mozzarella e verdure grigliate",i:[["mozzarella",100,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Tofu saltato con verdure",i:[["tofu",150,1],["verdure",250,0],["olio",10,1],["mandorle",10,1]]},
+  {t:"Tacchino con verdure e avocado",vt:"Tofu con verdure e avocado",i:[["tacchino",130,1],["avocado",50,1],["verdure",250,0],["olio",10,1]]}
+];
+const CEN_K = [
+  {t:"Merluzzo al forno con verdure",vt:"Frittata con verdure",i:[["merluzzo",200,1],["verdure",250,0],["olio",15,1]]},
+  {t:"Uova sode e avocado",i:[["uova",120,1],["avocado",60,1],["verdure",250,0],["olio",5,1]]},
+  {t:"Straccetti di manzo e verdure",vt:"Tofu alla piastra e verdure",i:[["manzo",130,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Salmone al forno con verdure",vt:"Tofu al forno con verdure",i:[["salmone",130,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Pollo alle erbe con verdure",vt:"Uova al tegamino e verdure",i:[["pollo",130,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Tofu al forno con verdure",i:[["tofu",150,1],["verdure",250,0],["olio",10,1]]},
+  {t:"Parmigiano, uova e verdure",i:[["uova",120,1],["parmigiano",20,1],["verdure",250,0],["olio",10,1]]}
+];
+// sostituzioni vegetariane: alimento -> [nuovo, moltiplicatore grammi]
+const VEG = {pollo:["tofu",1.2],tacchino:["legumi",1.5],manzo:["legumi",1.6],salmone:["tofu",1.25],merluzzo:["uova",.67],tonno:["uova",1.5]};
+const WD = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+const WDL = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+const ACT = {
+  sed:{l:"Sedentaria (lavoro seduto, niente sport)",f:1.2},
+  leg:{l:"Leggera (1-3 allenamenti a settimana)",f:1.375},
+  mod:{l:"Moderata (3-5 allenamenti a settimana)",f:1.55},
+  alta:{l:"Intensa (6-7 allenamenti a settimana)",f:1.725}
+};
+const GOAL = {giu:"Perdere peso",man:"Mantenere il peso",su:"Aumentare massa muscolare"};
+
+// ===== CALCOLI =====
+function compute(p){
+  const bmi = p.peso/((p.alt/100)**2);
+  const bmr = 10*p.peso + 6.25*p.alt - 5*p.eta + (p.sesso==="M"?5:-161); // Mifflin-St Jeor
+  const tdee = bmr*ACT[p.att].f;
+  const floor = Math.max(p.sesso==="M"?1500:1200, bmr);
+  let goal = p.obi, notes=[];
+  if(goal==="giu" && bmi<20){goal="man";notes.push({k:"warn",t:"Con un BMI sotto 20 il calo di peso non è consigliato: il piano è impostato sul mantenimento."})}
+  let kcal = tdee;
+  if(goal==="giu"){const def=Math.min(tdee*0.2,500);kcal=Math.max(tdee-def,floor);if(kcal===floor&&tdee-def<floor)notes.push({k:"warn",t:"Il deficit è stato ridotto per non scendere sotto la soglia minima di sicurezza."})}
+  if(goal==="su") kcal = tdee+Math.min(tdee*0.1,300);
+  kcal = Math.round(kcal/10)*10;
+  const refW = bmi>25 ? 25*((p.alt/100)**2) : p.peso; // per le proteine si usa il peso di riferimento se in sovrappeso
+  const protKg = goal==="giu"?1.6:goal==="su"?1.8:1.2;
+  let prot,fat,carb;
+  const dt = p.dieta||"med";
+  if(dt==="keto"){
+    prot = Math.round(refW*1.5); carb = 30;
+    fat = Math.round((kcal-prot*4-carb*4)/9);
+  } else if(dt==="low"){
+    prot = Math.round(refW*(protKg+0.2)); carb = Math.round(kcal*0.30/4);
+    fat = Math.round((kcal-prot*4-carb*4)/9);
+  } else {
+    prot = Math.round(refW*protKg); fat = Math.round(kcal*0.30/9);
+    carb = Math.max(0,Math.round((kcal-prot*4-fat*9)/4));
+  }
+  if(dt==="keto") notes.push({k:"warn",t:"La chetogenica è una dieta impegnativa: andrebbe seguita con un medico o un nutrizionista, soprattutto oltre le 3-4 settimane. I primi giorni possono dare stanchezza e mal di testa."});
+  const weekly = (kcal-tdee)*7/7700;
+  return {bmi,bmr:Math.round(bmr),tdee:Math.round(tdee),kcal,prot,fat,carb,weekly,goal,notes};
+}
+function nutr(items){let k=0,P=0,C=0,G=0;items.forEach(([f,g])=>{const d=FOODS[f];k+=d[1]*g/100;P+=d[2]*g/100;C+=d[3]*g/100;G+=d[4]*g/100});return {k,P,C,G}}
+// Bilancia le grammature del pasto: le fonti proteiche puntano alle proteine, quelle di carboidrati ai carboidrati, i grassi chiudono le calorie
+function scaleMeal(tpl,share,r,veg,keto,noCarb){
+  if(tpl.free) return {t:tpl.t,free:true,items:[],n:{k:0,P:0,C:0,G:0}};
+  let src = noCarb ? tpl.i.filter(([f])=>ROLE[f]!=="C") : tpl.i;
+  let items = src.map(([f,g,s])=>{if(veg&&VEG[f]){let [nf,m]=VEG[f];if(keto&&nf==="legumi"){nf="tofu";m=1.2}return [nf,g*m,s]}return [f,g,s]});
+  const tP=r.prot*share, tC=r.carb*share, tK=r.kcal*share;
+  const role=(f,s)=>s?(ROLE[f]||"X"):"X";
+  const fac=items.map(()=>1);
+  const sum=(key,filter)=>items.reduce((a,[f,g,s],i)=>filter(role(f,s))?a+FOODS[f][key]*g*fac[i]/100:a,0);
+  const lim={P:[0.75,1.8],C:[0.45,2.4],F:[0.3,3]};
+  for(let it=0;it<10;it++){
+    [["P",2,tP],["C",3,tC],["F",1,tK]].forEach(([R,key,target])=>{
+      const mine=items.reduce((a,[f,g,s],i)=>role(f,s)===R?a+FOODS[f][key]*g/100:a,0);
+      if(!mine) return;
+      const others=sum(key,x=>x!==R);
+      const v=Math.min(lim[R][1],Math.max(lim[R][0],(target-others)/mine));
+      items.forEach(([f,g,s],i)=>{if(role(f,s)===R)fac[i]=v});
+    });
+  }
+  // se le calorie restano basse o alte, ritocca tutte le porzioni insieme
+  const kNow=sum(1,x=>x!=="X"), kFix=sum(1,x=>x==="X"); // U (legumi) si muove solo qui
+  if(kNow>0){const u=Math.min(1.5,Math.max(0.8,(tK-kFix)/kNow));items.forEach(([f,g,s],i)=>{if(s)fac[i]*=u})}
+  items = items.map(([f,g,s],i)=>{
+    if(!s) return [f,g];
+    let v=g*fac[i];
+    if(f==="uova") v=Math.max(60,Math.round(v/60)*60);
+    else if(f==="olio") v=Math.max(5,Math.round(v/5)*5);
+    else v=Math.round(v/5)*5;
+    return [f,v];
+  }).filter(([,g])=>g>0);
+  let title = veg&&tpl.vt?tpl.vt:tpl.t;
+  if(noCarb && src.length!==tpl.i.length){title=title.replace(/ (con|e) (patate|pane integrale|pane)$/,"");if(!/verdure/.test(title))title+=" e verdure"}
+  return {t:title,items,n:nutr(items)};
+}
+function buildWeek(p,r){
+  const pct = p.pasti==="5"?{col:.20,sp1:.10,pra:.35,sp2:.10,cen:.25}:{col:.25,pra:.40,cen:.35};
+  const veg = p.alim==="veg", keto=(p.dieta==="keto");
+  const T = keto?{col:COL_K,spu:SPU_K,pra:PRA_K,cen:CEN_K}:{col:COL,spu:SPU,pra:PRA,cen:CEN};
+  return WD.map((_,d)=>{
+    const meals=[];
+    meals.push({k:"col",name:"Colazione",cls:"col",...scaleMeal(T.col[d%T.col.length],pct.col,r,veg,keto)});
+    if(pct.sp1) meals.push({k:"sp1",name:"Spuntino",cls:"spu",...scaleMeal(T.spu[d%T.spu.length],pct.sp1,r,veg,keto)});
+    meals.push({k:"pra",name:"Pranzo",cls:"pra",...scaleMeal(T.pra[d],pct.pra,r,veg,keto)});
+    if(pct.sp2) meals.push({k:"sp2",name:"Merenda",cls:"spu",...scaleMeal(T.spu[(d+1)%T.spu.length],pct.sp2,r,veg,keto)});
+    meals.push({k:"cen",name:"Cena",cls:"cen",...scaleMeal(T.cen[d],pct.cen,r,veg,keto,p.dieta==="low")});
+    const tot=meals.reduce((a,m)=>({k:a.k+m.n.k,P:a.P+m.n.P,C:a.C+m.n.C,G:a.G+m.n.G}),{k:0,P:0,C:0,G:0});
+    return {meals,tot,free:meals.some(m=>m.free)};
+  });
+}
+function qLabel(f,g){
+  if(f==="uova"){const n=Math.round(g/60);return `${n} ${n===1?"uovo":"uova"} (${g} g)`}
+  if(f==="olio"){const c=g/10;return `${c===0.5?"½":c.toLocaleString("it-IT")} ${c>1?"cucchiai":"cucchiaio"} (${g} g)`}
+  if(FOODS[f][6]==="ml") return `${g} ml`;
+  return `${g} g`;
+}
+function swapsFor(f,g){
+  const c=FOODS[f][6]; if(!["cer","pane","pat"].includes(c)) return null;
+  // 100 g pasta/riso/farro/cous cous = 130 g pane = 400 g patate
+  const pasta = c==="cer"?g:c==="pane"?g/1.3:g/4;
+  const r=x=>Math.round(x/5)*5;
+  return [["Pasta",r(pasta)],["Riso",r(pasta)],["Farro",r(pasta)],["Cous cous",r(pasta)],["Pane integrale",r(pasta*1.3)],["Patate",r(pasta*4)]].filter(([n])=>!FOODS[f][0].startsWith(n));
+}
+
+// ===== STATO =====
+const S={get(k,d){try{const v=localStorage.getItem("dsm_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("dsm_"+k,JSON.stringify(v))}catch(e){}}};
+const EXAMPLE={sesso:"F",eta:42,alt:165,peso:68,att:"leg",obi:"giu",dieta:"med",alim:"onn",pasti:"5",clin:false};
+let profile = S.get("profilo",null), isExample=!profile; if(!profile) profile={...EXAMPLE}; if(!profile.dieta) profile.dieta="med";
+let day = (new Date().getDay()+6)%7;
+let tab = "piano";
+const app=document.getElementById("app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString("it-IT");
+
+// ===== VISTA PIANO =====
+function summaryCard(r){
+  const pace = r.goal==="giu"?`circa ${Math.abs(r.weekly).toLocaleString("it-IT",{maximumFractionDigits:1})} kg a settimana in meno`:r.goal==="su"?`circa ${r.weekly.toLocaleString("it-IT",{maximumFractionDigits:1})} kg a settimana in più`:"peso stabile";
+  return `<div class="card">
+    <h2>Il tuo fabbisogno ${isExample?'<span class="pill warn">Esempio</span>':""}</h2>
+    <div class="kcal">${fmt(r.kcal)} <small>kcal al giorno</small></div>
+    <div class="macros"><div><b>${r.prot} g</b><span>Proteine</span></div><div><b>${r.carb} g</b><span>Carboidrati</span></div><div><b>${r.fat} g</b><span>Grassi</span></div></div>
+    <div class="facts">
+      <span>Dieta</span><span>${DIETS[profile.dieta].l}</span>
+      <span>Obiettivo</span><span>${GOAL[r.goal]}</span>
+      <span>Ritmo stimato</span><span>${pace}</span>
+      <span>Metabolismo a riposo</span><span>${fmt(r.bmr)} kcal</span>
+      <span>Consumo giornaliero</span><span>${fmt(r.tdee)} kcal</span>
+      <span>BMI</span><span>${r.bmi.toLocaleString("it-IT",{maximumFractionDigits:1})}</span>
+    </div>
+    ${r.notes.map(n=>`<div class="alert ${n.k}">${n.t}</div>`).join("")}
+    ${isExample?`<div class="alert warn">Questi sono dati di esempio. Inserisci i tuoi in <a href="#profilo" style="color:inherit;font-weight:700">Profilo</a>.</div>`:""}
+    <p class="small" style="margin:12px 0 0">Piano indicativo calcolato con formule standard. Non sostituisce un nutrizionista.</p>
+  </div>`;
+}
+function renderPiano(){
+  if(profile.clin){
+    app.innerHTML=`<h1 class="big">Serve un professionista</h1><div class="card" style="margin-top:18px;max-width:640px"><p style="margin-top:0">Hai indicato gravidanza, allattamento o una condizione medica. In questi casi il fabbisogno cambia molto e un piano automatico può essere sbagliato o rischioso.</p><p>Rivolgiti a un medico, un biologo nutrizionista o un dietista. Se ti sei sbagliata, togli la spunta in <a href="#profilo" style="color:var(--accent)">Profilo</a>.</p></div>`;return;
+  }
+  const r=compute(profile), week=buildWeek(profile,r), d=week[day];
+  app.innerHTML=`<h1 class="big">La tua settimana</h1><p class="sub">${DIETS[profile.dieta].l} · ${profile.alim==="veg"?"vegetariana":"onnivora"} · ${profile.pasti} pasti al giorno · ${ACT[profile.att].l.split(" (")[0]}</p>
+  <div class="grid">${summaryCard(r)}
+    <div style="min-width:0">
+      <div class="days" role="group" aria-label="Giorno">${WD.map((w,i)=>`<button data-d="${i}" aria-pressed="${i===day}">${w}<small>${fmt(week[i].tot.k)}</small></button>`).join("")}</div>
+      <div class="daytot"><h3>${WDL[day]}</h3><span>${fmt(d.tot.k)} kcal · P ${fmt(d.tot.P)} g · C ${fmt(d.tot.C)} g · G ${fmt(d.tot.G)} g${d.free?" · pasto libero escluso":""}</span></div>
+      <div class="meals">${d.meals.map((m,mi)=>`<section class="meal ${m.cls}">
+        <div class="meal-head"><div><b>${m.name}</b><div class="t">${esc(m.t)}</div></div><span class="k">${m.free?"":fmt(m.n.k)+" kcal"}</span></div>
+        ${m.free?`<div class="free">Mangia quello che ti va, con misura e senza sensi di colpa. Se puoi, inizia con della verdura.</div>`:
+        `<ul class="items">${m.items.map(([f,g],ii)=>{const sw=swapsFor(f,g);return `<li class="${sw?"has-sw":""}"><span aria-hidden="true">${FOODS[f][5]}</span><span class="n">${FOODS[f][0]}</span><span class="q">${qLabel(f,g)}</span>${sw?`<button class="sw" data-sw="${mi}-${ii}" aria-expanded="false" aria-label="Alternative a ${FOODS[f][0]}">⇆</button><div class="swaps" id="sw-${mi}-${ii}" hidden>${sw.map(([n,q])=>`<span class="chip">${n} ${q} g</span>`).join("")}</div>`:""}</li>`}).join("")}</ul>`}
+      </section>`).join("")}</div>
+      <p class="small">Tutti i pesi sono a crudo, tranne i legumi che sono cotti.${profile.dieta==="keto"?"":" ⇆ mostra le alternative equivalenti per cereali, pane e patate."}</p>
+    </div></div>`;
+  app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{day=+b.dataset.d;renderPiano()});
+  app.querySelectorAll("[data-sw]").forEach(b=>b.onclick=()=>{const el=document.getElementById("sw-"+b.dataset.sw);el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden))});
+}
+
+// ===== VISTA PROFILO =====
+function seg(name,opts,val){return `<div class="seg">${Object.entries(opts).map(([v,l])=>`<input type="radio" name="${name}" id="${name}-${v}" value="${v}" ${val===v?"checked":""}><label for="${name}-${v}">${l}</label>`).join("")}</div>`}
+function renderProfilo(){
+  const p=profile;
+  app.innerHTML=`<h1 class="big">I tuoi dati</h1><p class="sub">Servono per calcolare quanto ti serve ogni giorno. Restano solo su questo dispositivo.</p>
+  <div class="card" style="margin-top:18px;max-width:640px"><form id="pf" novalidate>
+    <fieldset><legend>Sesso</legend>${seg("sesso",{F:"Donna",M:"Uomo"},p.sesso)}</fieldset>
+    <div class="row2"><label class="f">Età<input id="eta" type="number" inputmode="numeric" min="18" max="90" value="${p.eta}"></label>
+    <label class="f">Altezza (cm)<input id="alt" type="number" inputmode="numeric" min="140" max="220" value="${p.alt}"></label></div>
+    <label class="f">Peso attuale (kg)<input id="peso" type="number" inputmode="decimal" step="0.1" min="35" max="250" value="${p.peso}"></label>
+    <label class="f">Attività fisica<select id="att">${Object.entries(ACT).map(([k,v])=>`<option value="${k}" ${p.att===k?"selected":""}>${v.l}</option>`).join("")}</select></label>
+    <fieldset><legend>Obiettivo</legend>${seg("obi",GOAL,p.obi)}</fieldset>
+    <fieldset><legend>Tipo di dieta</legend>${seg("dieta",Object.fromEntries(Object.entries(DIETS).map(([k,v])=>[k,v.l])),p.dieta)}<p class="small" id="dietdesc" style="margin:4px 0 0">${DIETS[p.dieta].d}</p></fieldset>
+    <fieldset><legend>Alimentazione</legend>${seg("alim",{onn:"Onnivora",veg:"Vegetariana"},p.alim)}</fieldset>
+    <fieldset><legend>Pasti al giorno</legend>${seg("pasti",{"3":"3 pasti","5":"5 pasti (con spuntini)"},p.pasti)}</fieldset>
+    <label class="chk"><input type="checkbox" id="clin" ${p.clin?"checked":""}><span>Sono in gravidanza o allattamento, oppure ho una condizione medica (diabete, malattie renali, tiroide, altro)</span></label>
+    <div class="err" id="err" role="alert"></div>
+    <div class="actions"><button class="btn" type="submit">Calcola il mio piano</button>${!isExample?`<button class="btn ghost" type="button" id="reset">Cancella i miei dati</button>`:""}</div>
+  </form></div>`;
+  const form=document.getElementById("pf");
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const val=n=>form.querySelector(`input[name="${n}"]:checked`).value;
+    const np={sesso:val("sesso"),eta:+document.getElementById("eta").value,alt:+document.getElementById("alt").value,peso:+String(document.getElementById("peso").value).replace(",","."),att:document.getElementById("att").value,obi:val("obi"),dieta:val("dieta"),alim:val("alim"),pasti:val("pasti"),clin:document.getElementById("clin").checked};
+    const err=document.getElementById("err");
+    if(!np.eta||np.eta<18){err.textContent="Il piano è pensato per adulti. Sotto i 18 anni serve un pediatra o un nutrizionista.";return}
+    if(np.eta>90){err.textContent="Controlla l'età: il valore massimo è 90.";return}
+    if(!np.alt||np.alt<140||np.alt>220){err.textContent="Inserisci l'altezza in centimetri, tra 140 e 220.";return}
+    if(!np.peso||np.peso<35||np.peso>250){err.textContent="Inserisci il peso in chili, tra 35 e 250.";return}
+    profile=np;isExample=false;S.set("profilo",np);toast("Piano aggiornato");go("piano");
+  };
+  form.querySelectorAll('input[name="dieta"]').forEach(i=>i.onchange=()=>{document.getElementById("dietdesc").textContent=DIETS[i.value].d});
+  const rs=document.getElementById("reset"); if(rs) rs.onclick=()=>{try{localStorage.removeItem("dsm_profilo")}catch(e){}profile={...EXAMPLE};isExample=true;toast("Dati cancellati");renderProfilo()};
+}
+
+// ===== VISTA SPESA =====
+function renderSpesa(){
+  if(profile.clin){renderPiano();return}
+  const r=compute(profile), week=buildWeek(profile,r), tot={};
+  week.forEach(d=>d.meals.forEach(m=>m.items.forEach(([f,g])=>{tot[f]=(tot[f]||0)+g})));
+  const list=Object.entries(tot).sort((a,b)=>FOODS[a[0]][0].localeCompare(FOODS[b[0]][0],"it"));
+  const ck=S.get("spesa",{});
+  const q=(f,g)=>{if(f==="uova")return Math.round(g/60)+" uova";const u=FOODS[f][6]==="ml"?"ml":"g";if(g>=1000)return (g/1000).toLocaleString("it-IT",{maximumFractionDigits:2})+(u==="ml"?" l":" kg");return g+" "+u};
+  app.innerHTML=`<h1 class="big">Lista della spesa</h1><p class="sub">Tutto quello che serve per la settimana, pasto libero escluso. Pesi a crudo, legumi già cotti.</p>
+    <div class="shop">${list.map(([f,g],i)=>`<label class="${ck[f]?"done":""}"><input type="checkbox" id="sp-${f}" data-f="${f}" ${ck[f]?"checked":""}><span aria-hidden="true">${FOODS[f][5]}</span><span class="n">${FOODS[f][0]}</span><span class="q">${q(f,g)}</span></label>`).join("")}</div>
+    <div class="actions"><button class="btn" id="copy">Copia lista</button><button class="btn ghost" id="clr">Togli le spunte</button></div>`;
+  app.querySelectorAll(".shop input").forEach(c=>c.onchange=()=>{const s=S.get("spesa",{});s[c.dataset.f]=c.checked;S.set("spesa",s);c.closest("label").classList.toggle("done",c.checked)});
+  document.getElementById("clr").onclick=()=>{S.set("spesa",{});renderSpesa()};
+  document.getElementById("copy").onclick=()=>{const t="Lista della spesa\n"+list.map(([f,g])=>"- "+FOODS[f][0]+": "+q(f,g)).join("\n");navigator.clipboard.writeText(t).then(()=>toast("Lista copiata")).catch(()=>toast("Copia non riuscita su questo dispositivo"))};
+}
+
+// ===== VISTA CONSIGLI (linee guida CREA per una sana alimentazione) =====
+const ADVICE=[
+  {t:"Come leggere il piano",b:["I pesi sono a crudo, tranne i legumi che sono già cotti. I surgelati si pesano scongelati.","Pesa la parte che mangi: senza ossa, bucce, torsoli.","Puoi scambiare intere giornate tra loro e pranzo con cena dello stesso giorno.","Con ⇆ trovi le quantità equivalenti di pasta, riso, farro, cous cous, pane e patate."]},
+  {t:"Ritmo e aspettative",b:["Un calo sano è di circa 0,5 kg a settimana. Più veloce di così si perde soprattutto acqua e muscolo.","Pesati una volta a settimana, sempre alla stessa ora. Il peso oscilla anche nella stessa giornata.","Le prime 1-3 settimane il peso può restare fermo: è normale.","Se hai molta fame, stanchezza o capogiri, aumenta le porzioni e parlane con un professionista."]},
+  {t:"Frequenze settimanali",b:["Pesce 2-3 volte, carne bianca 2-3 volte, carne rossa al massimo 1 volta.","Legumi almeno 3 volte, uova 2-4 volte, formaggi 2-3 volte.","Salumi e insaccati solo occasionalmente.","Verdura a pranzo e a cena, 2-3 porzioni di frutta al giorno."]},
+  {t:"Condimenti",b:["Olio extra vergine a crudo, misurato col cucchiaio.","Sale con moderazione, meglio iodato: si trova già in pane, formaggi e cibi pronti.","Usa spezie ed erbe per dare sapore: curcuma, pepe, origano, rosmarino, limone, aglio."]},
+  {t:"Bevande",b:["Almeno 1,5-2 litri d'acqua al giorno.","Bibite zuccherate e succhi solo occasionalmente.","Alcol il meno possibile: al massimo un bicchiere di vino in occasioni particolari."]},
+  {t:"I tipi di dieta",b:["Mediterranea: la più studiata e la più facile da mantenere nel tempo. È il punto di partenza consigliato.","Low carb: meno pasta e pane, più proteine e grassi buoni. Può aiutare chi ha molta fame di dolci, ma serve comunque varietà.","Chetogenica: quasi zero carboidrati. Dà risultati rapidi all'inizio ma è difficile da sostenere e va fatta con un professionista, non a lungo da soli.","Qualunque dieta scegli, conta soprattutto riuscire a seguirla per mesi."]},
+  {t:"Quando fermarsi",b:["Il piano è per adulti in salute. Non usarlo in gravidanza, allattamento o con patologie.","Non scendere mai sotto le calorie indicate e non saltare i pasti.","Se il rapporto con il cibo ti crea ansia o pensieri ricorrenti, parlane con un medico."]}
+];
+function renderConsigli(){
+  app.innerHTML=`<h1 class="big">Consigli</h1><p class="sub">Regole semplici dalle linee guida italiane per una sana alimentazione.</p>
+  <div class="advice">${ADVICE.map(a=>`<article><h3>${a.t}</h3><ul>${a.b.map(x=>`<li>${x}</li>`).join("")}</ul></article>`).join("")}</div>`;
+}
+
+// ===== NAVIGAZIONE =====
+function toast(t){const el=document.createElement("div");el.className="toast";el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2200)}
+const VIEWS={piano:renderPiano,profilo:renderProfilo,spesa:renderSpesa,consigli:renderConsigli};
+function go(t){tab=t;document.querySelectorAll("nav.tabs button").forEach(b=>{if(b.dataset.tab===t)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});VIEWS[t]();window.scrollTo(0,0);if(location.hash.slice(1)!==t)history.replaceState(null,"","#"+t)}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>go(b.dataset.tab));
+window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(VIEWS[h]&&h!==tab)go(h)});
+go(VIEWS[location.hash.slice(1)]?location.hash.slice(1):"piano");
+</script>
