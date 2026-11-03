@@ -144,6 +144,28 @@ details.addfood summary{cursor:pointer;font-weight:600;color:var(--accent)}
 .mylist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .mylist div{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:6px 0}
 .mylist div span{flex:1;min-width:0}
+.pacebar{margin:12px 0 0;font-weight:600;color:var(--accent)}
+details.more{margin-top:10px}
+details.more summary{cursor:pointer;color:var(--muted);font-size:.9rem;font-weight:600}
+@media (min-width:900px){details.more:not([open]) summary{}}
+/* Telefono: sezioni a tutta larghezza, barra dei giorni fissa in alto */
+@media (max-width:700px){
+  .wrap{padding-block:12px 96px}
+  h1.big{font-size:1.6rem}
+  .grid{gap:0;margin-top:12px}
+  .card,.meal,.shop,.advice article{margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));border-radius:0;box-shadow:none;border-bottom:1px solid var(--line)}
+  .card,.advice article{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .meal-head,.items,.colpick,.free{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .shop{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .meals{gap:0}
+  .advice{gap:0}
+  .days{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:var(--bg);margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+  .days button{min-width:52px;padding:7px 10px}
+  .daytot{margin:12px 0 10px}
+  .kcal{font-size:2.2rem}
+  .sheet{max-height:100%;height:100%;border-radius:0}
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.9rem;z-index:30}
 </style>
 
@@ -470,6 +492,9 @@ function summaryCard(r){
     <h2>Il tuo fabbisogno ${isExample?'<span class="pill warn">Esempio</span>':""}</h2>
     <div class="kcal">${fmt(r.kcal)} <small>kcal al giorno</small></div>
     <div class="macros"><div><b>${r.prot} g</b><span>Proteine</span></div><div><b>${r.carb} g</b><span>Carboidrati</span></div><div><b>${r.fat} g</b><span>Grassi</span></div></div>
+    <p class="pacebar">${pace}</p>
+    ${isExample?`<div class="alert warn">Questi sono dati di esempio. Inserisci i tuoi in <a href="#profilo" style="color:inherit;font-weight:700">Profilo</a>.</div>`:""}
+    <details class="more"><summary>Dettagli del calcolo</summary>
     <div class="facts">
       <span>Dieta</span><span>${DIETS[profile.dieta].l}</span>
       <span>Obiettivo</span><span>${GOAL[r.goal]}${r.goal==="giu"?", ritmo "+RITMO[profile.ritmo||"medio"].l.toLowerCase():""}</span>
@@ -478,9 +503,9 @@ function summaryCard(r){
       <span>Consumo giornaliero</span><span>${fmt(r.tdee)} kcal</span>
       <span>BMI</span><span>${r.bmi.toLocaleString("it-IT",{maximumFractionDigits:1})}</span>
     </div>
-    ${r.notes.map(n=>`<div class="alert ${n.k}">${n.t}</div>`).join("")}
-    ${isExample?`<div class="alert warn">Questi sono dati di esempio. Inserisci i tuoi in <a href="#profilo" style="color:inherit;font-weight:700">Profilo</a>.</div>`:""}
     <p class="small" style="margin:12px 0 0">Piano indicativo calcolato con formule standard. Non sostituisce un nutrizionista.</p>
+    </details>
+    ${r.notes.map(n=>`<div class="alert ${n.k}">${n.t}</div>`).join("")}
   </div>`;
 }
 const SLOTN={col:"Colazione",spu:"Spuntino",pra:"Pranzo",cen:"Cena"};
