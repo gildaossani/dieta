@@ -312,6 +312,11 @@ const ACT = {
   mod:{l:"Moderata (3-5 allenamenti a settimana)",f:1.55},
   alta:{l:"Intensa (6-7 allenamenti a settimana)",f:1.725}
 };
+const RITMO = {
+  lento:{l:"Graduale",d:"circa 1-1,5 kg al mese",pct:0.15,max:350},
+  medio:{l:"Normale",d:"circa 2 kg al mese",pct:0.20,max:500},
+  veloce:{l:"Sostenuto",d:"circa 2,5-3 kg al mese",pct:0.30,max:750}
+};
 const GOAL = {giu:"Perdere peso",man:"Mantenere il peso",su:"Aumentare massa muscolare"};
 
 // ===== CALCOLI =====
@@ -319,11 +324,16 @@ function compute(p){
   const bmi = p.peso/((p.alt/100)**2);
   const bmr = 10*p.peso + 6.25*p.alt - 5*p.eta + (p.sesso==="M"?5:-161); // Mifflin-St Jeor
   const tdee = bmr*ACT[p.att].f;
-  const floor = Math.max(p.sesso==="M"?1500:1200, bmr);
+  const floor = p.sesso==="M"?1500:1200;
   let goal = p.obi, notes=[];
   if(goal==="giu" && bmi<20){goal="man";notes.push({k:"warn",t:"Con un BMI sotto 20 il calo di peso non è consigliato: il piano è impostato sul mantenimento."})}
   let kcal = tdee;
-  if(goal==="giu"){const def=Math.min(tdee*0.2,500);kcal=Math.max(tdee-def,floor);if(kcal===floor&&tdee-def<floor)notes.push({k:"warn",t:"Il deficit è stato ridotto per non scendere sotto la soglia minima di sicurezza."})}
+  if(goal==="giu"){
+    const rt=RITMO[p.ritmo||"medio"];
+    const def=Math.min(tdee*rt.pct,rt.max);kcal=Math.max(tdee-def,floor);
+    if(tdee-def<floor) notes.push({k:"warn",t:`Per non scendere sotto ${floor} kcal, la soglia minima di sicurezza, il calo è più lento di quello scelto. Per andare più veloce serve più movimento: ogni allenamento in più a settimana alza le calorie che bruci.`});
+    if((p.ritmo||"medio")==="veloce") notes.push({k:"warn",t:"Ritmo sostenuto: se senti molta fame, stanchezza o capogiri, torna al ritmo normale. Le prime settimane il calo è più rapido perché si perde anche acqua."});
+  }
   if(goal==="su") kcal = tdee+Math.min(tdee*0.1,300);
   kcal = Math.round(kcal/10)*10;
   const refW = bmi>25 ? 25*((p.alt/100)**2) : p.peso; // per le proteine si usa il peso di riferimento se in sovrappeso
@@ -454,14 +464,15 @@ const fmt=n=>Math.round(n).toLocaleString("it-IT");
 
 // ===== VISTA PIANO =====
 function summaryCard(r){
-  const pace = r.goal==="giu"?`circa ${Math.abs(r.weekly).toLocaleString("it-IT",{maximumFractionDigits:1})} kg a settimana in meno`:r.goal==="su"?`circa ${r.weekly.toLocaleString("it-IT",{maximumFractionDigits:1})} kg a settimana in più`:"peso stabile";
+  const f1=x=>x.toLocaleString("it-IT",{maximumFractionDigits:1});
+  const pace = r.goal==="giu"?`circa ${f1(Math.abs(r.weekly))} kg a settimana (${f1(Math.abs(r.weekly)*4.3)} kg al mese)`:r.goal==="su"?`circa ${r.weekly.toLocaleString("it-IT",{maximumFractionDigits:1})} kg a settimana in più`:"peso stabile";
   return `<div class="card">
     <h2>Il tuo fabbisogno ${isExample?'<span class="pill warn">Esempio</span>':""}</h2>
     <div class="kcal">${fmt(r.kcal)} <small>kcal al giorno</small></div>
     <div class="macros"><div><b>${r.prot} g</b><span>Proteine</span></div><div><b>${r.carb} g</b><span>Carboidrati</span></div><div><b>${r.fat} g</b><span>Grassi</span></div></div>
     <div class="facts">
       <span>Dieta</span><span>${DIETS[profile.dieta].l}</span>
-      <span>Obiettivo</span><span>${GOAL[r.goal]}</span>
+      <span>Obiettivo</span><span>${GOAL[r.goal]}${r.goal==="giu"?", ritmo "+RITMO[profile.ritmo||"medio"].l.toLowerCase():""}</span>
       <span>Ritmo stimato</span><span>${pace}</span>
       <span>Metabolismo a riposo</span><span>${fmt(r.bmr)} kcal</span>
       <span>Consumo giornaliero</span><span>${fmt(r.tdee)} kcal</span>
@@ -615,6 +626,7 @@ function renderProfilo(){
     <label class="f">Peso attuale (kg)<input id="peso" type="number" inputmode="decimal" step="0.1" min="35" max="250" value="${p.peso}"></label>
     <label class="f">Attività fisica<select id="att">${Object.entries(ACT).map(([k,v])=>`<option value="${k}" ${p.att===k?"selected":""}>${v.l}</option>`).join("")}</select></label>
     <fieldset><legend>Obiettivo</legend>${seg("obi",GOAL,p.obi)}</fieldset>
+    <fieldset id="ritmo-box" ${p.obi==="giu"?"":"hidden"}><legend>Ritmo di dimagrimento</legend>${seg("ritmo",Object.fromEntries(Object.entries(RITMO).map(([k,v])=>[k,v.l+" ("+v.d+")"])),p.ritmo||"medio")}<p class="small" style="margin:4px 0 0">È una stima: il calo reale dipende anche da sonno, ciclo, ritenzione e da quanto ti muovi.</p></fieldset>
     <fieldset><legend>Tipo di dieta</legend>${seg("dieta",Object.fromEntries(Object.entries(DIETS).map(([k,v])=>[k,v.l])),p.dieta)}<p class="small" id="dietdesc" style="margin:4px 0 0">${DIETS[p.dieta].d}</p></fieldset>
     <fieldset><legend>Alimentazione</legend>${seg("alim",{onn:"Onnivora",veg:"Vegetariana"},p.alim)}</fieldset>
     <fieldset><legend>Pasti al giorno</legend>${seg("pasti",{"3":"3 pasti","5":"5 pasti (con spuntini)"},p.pasti)}</fieldset>
@@ -632,7 +644,7 @@ function renderProfilo(){
   form.onsubmit=e=>{
     e.preventDefault();
     const val=n=>form.querySelector(`input[name="${n}"]:checked`).value;
-    const np={sesso:val("sesso"),eta:+document.getElementById("eta").value,alt:+document.getElementById("alt").value,peso:+String(document.getElementById("peso").value).replace(",","."),att:document.getElementById("att").value,obi:val("obi"),dieta:val("dieta"),alim:val("alim"),pasti:val("pasti"),clin:document.getElementById("clin").checked};
+    const np={sesso:val("sesso"),eta:+document.getElementById("eta").value,alt:+document.getElementById("alt").value,peso:+String(document.getElementById("peso").value).replace(",","."),att:document.getElementById("att").value,obi:val("obi"),ritmo:val("ritmo"),dieta:val("dieta"),alim:val("alim"),pasti:val("pasti"),clin:document.getElementById("clin").checked};
     const err=document.getElementById("err");
     if(!np.eta||np.eta<18){err.textContent="Il piano è pensato per adulti. Sotto i 18 anni serve un pediatra o un nutrizionista.";return}
     if(np.eta>90){err.textContent="Controlla l'età: il valore massimo è 90.";return}
@@ -640,6 +652,7 @@ function renderProfilo(){
     if(!np.peso||np.peso<35||np.peso>250){err.textContent="Inserisci il peso in chili, tra 35 e 250.";return}
     profile=np;isExample=false;S.set("profilo",np);toast("Piano aggiornato");go("piano");
   };
+  form.querySelectorAll('input[name="obi"]').forEach(i=>i.onchange=()=>{document.getElementById("ritmo-box").hidden=i.value!=="giu"});
   form.querySelectorAll('input[name="dieta"]').forEach(i=>i.onchange=()=>{document.getElementById("dietdesc").textContent=DIETS[i.value].d});
   const rs=document.getElementById("reset"); if(rs) rs.onclick=()=>{try{localStorage.removeItem("dsm_profilo")}catch(e){}profile={...EXAMPLE};isExample=true;toast("Dati cancellati");renderProfilo()};
 }
